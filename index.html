@@ -42,6 +42,10 @@
       font-size: 1.15rem;
       max-width: 850px;
     }
+    .abstract {
+      margin: 1.2rem 0 1.6rem;
+      font-size: 1.04rem;
+    }
     .callout {
       border-left: 5px solid var(--duke-navy);
       background: #f7f8fa;
@@ -63,6 +67,81 @@
       display: block;
       font-size: 1.6rem;
       color: var(--duke-navy);
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      border-bottom: 2px solid var(--duke-navy);
+      margin: 1.8rem 0 1.4rem;
+      padding-bottom: 0;
+    }
+    .tab-button {
+      border: 2px solid var(--duke-navy);
+      border-bottom: none;
+      background: #eef3f8;
+      color: var(--duke-navy);
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 750;
+      border-radius: 6px 6px 0 0;
+    }
+    .tab-button.active {
+      background: var(--duke-navy);
+      color: #ffffff;
+      border-color: var(--duke-navy);
+      box-shadow: 0 -2px 0 var(--duke-copper) inset;
+    }
+    .tab-button:focus-visible {
+      outline: 3px solid var(--duke-copper);
+      outline-offset: 2px;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .print-report .tab-panel {
+      display: block;
+      page-break-before: always;
+      break-before: page;
+    }
+    .print-report .tab-panel:first-of-type {
+      page-break-before: auto;
+      break-before: auto;
+    }
+    .print-report h2 {
+      border-top: none;
+      padding-top: 0;
+    }
+    @media print {
+      @page {
+        margin: 0.85in 0.55in 0.6in;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: none;
+        padding: 0;
+      }
+      .chart {
+        min-height: 410px;
+      }
+      h1, h2, h3, .chart-label {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+      .abstract, .callout, .metric-grid, table, details, .static-chart, .keep-block {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .figure-caption {
+        break-before: avoid;
+        page-break-before: avoid;
+      }
     }
     table {
       width: 100%;
@@ -100,10 +179,22 @@
       font-weight: 650;
       font-size: 1rem;
     }
-    .two-col {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
+    .figure-caption {
+      margin: -1.35rem 0 2rem;
+      color: #444;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .keep-block {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .prompt-block {
+      margin: 1rem 0 1.5rem;
+    }
+    .prompt-block h4 {
+      color: var(--duke-navy);
+      margin: 0 0 0.4rem;
     }
     .small {
       color: #555;
@@ -125,86 +216,85 @@
 <body>
 <main>
   <h1>Notebook vs. Percent-Cell Python for Coding Agents</h1>
-  <p class="lead">A controlled comparison of two coding-agent workflows for the same analysis task: direct `.ipynb` editing versus VS Code/Jupyter percent-cell `.py` editing.</p>
 
-  <div class="callout">
-    <strong>Main takeaway:</strong> for this task, the direct notebook workflow used 1.94x as many total tokens and 1.71x as many model calls. The percent-cell `.py` workflow reached the same analytical conclusion with fewer model calls and a much smaller source artifact. Fresh-input and cost comparisons point in the same direction, but they are partly confounded by cross-session prompt-cache behavior.
+
+  <div class="tabs" role="tablist">
+    <button class="tab-button active" data-tab="overview" type="button">Overview</button>
+    <button class="tab-button" data-tab="controlled" type="button">Controlled Comparison</button>
+    <button class="tab-button" data-tab="native" type="button">Agent-Native Comparison</button>
+    <button class="tab-button" data-tab="cache" type="button">Cache And Cost Notes</button>
+    <button class="tab-button" data-tab="appendix" type="button">Appendix</button>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric"><strong>1.94x</strong>Total token ratio</div>
-    <div class="metric"><strong>2.53x</strong>Fresh input ratio</div>
-    <div class="metric"><strong>2.03x</strong>Observed cost ratio</div>
-    <div class="metric"><strong>1.71x</strong>Model call ratio</div>
-    <div class="metric"><strong>2.32x</strong>Runtime ratio</div>
-  </div>
 
-  <h2>Executive Summary</h2>
-  <p>This experiment compared two agents doing the same Seattle Public Library checkout analysis with parallel instructions. Carson edited and executed a notebook. Confucius edited and executed a percent-cell Python file. Both agents had to inspect outputs before writing final interpretation.</p>
-  <p>The result was not just that the `.ipynb` file was larger at the end, although it was much larger. The notebook workflow also required more model calls and more fresh context during the task. The trace suggests the overhead came from the notebook acting as both source file and execution record: the agent had to edit JSON notebook structure, execute through notebook tooling, and inspect saved cell outputs.</p>
+  <section id="overview" class="tab-panel active">
+    <h2>Overview</h2>
+    <div class="abstract">
+      <p>Interactive data analysis is often taught and reviewed in notebooks, but coding agents have to read, edit, validate, and re-send the working artifact as context during a task. This report tests whether an <code>.ipynb</code> notebook is more token-expensive for agents than an equivalent VS Code/Jupyter percent-cell <code>.py</code> file, which preserves cell-based interaction while storing the analysis as plain Python text.</p>
+      <p>We ran two paired agent experiments in which agents analyzed Seattle Public Library checkout data to compare physical and digital borrowing trends over time and produce a short reproducible analysis report. In the controlled direct-edit comparison, one subagent edited and executed an existing notebook while a second subagent edited and executed an equivalent percent-cell Python file. In the agent-native comparison, one subagent used a less constrained notebook workflow that included generating, executing, inspecting, patching, and rerunning notebook artifacts, while the paired subagent used a percent-cell Python workflow. Across both comparisons, the notebook workflow accumulated more total tokens, required more model calls, and took longer. Internal worker names are retained as log labels for auditability, but the report treats workflow as the main unit of comparison.</p>
+    </div>
+    <div class="callout">
+      <strong>Main takeaway:</strong> both comparisons point in the same direction. Notebook workflows required more model calls, took longer, and accumulated more total task tokens. The exact cost multiplier is a best estimate because prompt caching changes the fresh/cached input split.
+    </div>
+    <div class="metric-grid">
+      <div class="metric"><strong>1.59x</strong>Agent-native total-token ratio</div>
+      <div class="metric"><strong>1.94x</strong>Controlled total-token ratio</div>
+      <div class="metric"><strong>1.25x</strong>Agent-native model-call ratio</div>
+      <div class="metric"><strong>1.71x</strong>Controlled model-call ratio</div>
+    </div>
+    <p>In both the looser agent-native workflow and the stricter direct-edit workflow, the notebook path required more model turns and accumulated more total session context. This workflow-friction result is stronger than any precise universal cost multiplier.</p>
+    <p>Total tokens are still useful because they measure cumulative context traffic. Fresh input and observed cost are useful too, but they are cache-sensitive and should be presented as estimates.</p>
+    <div id="overview-ratio-chart" class="chart"></div>
+    <p class="figure-caption"><strong>Figure:</strong> Total task tokens for notebook and percent-cell workflows within each experiment. <strong>Takeaway:</strong> the notebook workflow used more total tokens in both the agent-native and controlled comparisons.</p>
+    <div id="overview-total-chart" class="chart"></div>
+    <p class="figure-caption"><strong>Figure:</strong> Notebook-to-percent-cell ratios for total tokens, model calls, runtime, and cost estimates. <strong>Takeaway:</strong> the notebook workflow is consistently above parity, while the exact cost ratio is more cache-sensitive than the workflow and token-count ratios.</p>
+  </section>
 
-  <table>
-    <thead>
-      <tr><th>Agent</th><th>Workflow</th><th>Total tokens</th><th>Fresh input</th><th>Model calls</th><th>Runtime</th><th>GPT-5.5 cost</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Carson</td><td>Direct .ipynb</td><td>1,395,748</td><td>129,036</td><td>24</td><td>8m 30s</td><td>$1.61</td></tr>
-<tr><td>Confucius</td><td>Percent-cell .py</td><td>719,688</td><td>51,000</td><td>14</td><td>3m 40s</td><td>$0.79</td></tr>
-    </tbody>
-  </table>
-
-  <h2>Procedure</h2>
-  <p>The two workers received the same dataset, schema instructions, analysis question, and output requirements. The only intended difference was the durable analysis format.</p>
-  <ul>
-    <li>Notebook worker: direct edits to <code>analysis-notebook.ipynb</code>, execution with notebook tooling, targeted inspection of notebook cell outputs.</li>
-    <li>Percent-cell worker: direct edits to <code>analysis-cells.py</code>, execution with <code>.venv/bin/python</code>, targeted inspection of terminal output and saved CSV/PNG artifacts.</li>
-  </ul>
-  <p>The report is built from archived Codex JSONL session logs and cleaned CSV extracts generated from those logs. The raw logs, cleaned data, final worker artifacts, and report-generation script are included with the published repository so the analysis can be audited or rebuilt.</p>
-
-  <h2>Finding 1: Session Footprint</h2>
-  <p>Total token delta shows how much the session token counter grew at each model call. The notebook worker accumulated more calls and a larger final session footprint.</p>
-  <p class="chart-label">Direct .ipynb</p>
-  <div id="footprint-chart-1" class="chart"></div>
-  <p class="chart-label">Percent-cell .py</p>
-  <div id="footprint-chart-2" class="chart"></div>
-
-  <h2>Finding 2: Input Composition</h2>
-  <p>Cached input is still part of input and still counted in total tokens, but it is classified as reusable prefix context. Fresh input is the non-cached portion of the prompt for that call.</p>
-  <p class="chart-label">Direct .ipynb</p>
-  <div id="composition-chart-1" class="chart"></div>
-  <p class="chart-label">Percent-cell .py</p>
-  <div id="composition-chart-2" class="chart"></div>
-
-  <h2>Finding 3: Fresh Context</h2>
-  <p>Fresh/non-cached input is the closest logged proxy for newly processed input context. On this measure, the notebook workflow used 129,036 fresh input tokens versus 51,000 for the percent-cell workflow.</p>
-  <div id="fresh-chart" class="chart"></div>
-
-  <h2>Finding 4: Observed Cost and Cache Sensitivity</h2>
-  <p>Using GPT-5.5 rates and the cache classification exactly as logged, the notebook workflow cost about $1.61 and the percent-cell workflow cost about $0.79. That observed number is useful for understanding this run, but it should not be presented as the fair standalone cost of each workflow. The percent-cell worker appears to have benefited from a prompt cache that had already been warmed by the notebook worker's similar prompt.</p>
-  <div id="cost-chart" class="chart"></div>
-  <pre>cost =
-  fresh_input * 5.00 / 1,000,000
-  + cached_input * 0.50 / 1,000,000
-  + output * 30.00 / 1,000,000</pre>
-  <p>The table below shows how sensitive the cost comparison is to early cache handling. The direction stays the same, but the exact cost ratio should be treated as approximate rather than causal.</p>
-  <table>
-    <thead>
-      <tr><th>Scenario</th><th>Interpretation</th><th>Notebook cost</th><th>Percent-cell cost</th><th>Ratio</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Observed telemetry</td><td>Uses the cache classification exactly as logged. This is closest to observed billing, but it is confounded by run order.</td><td>$1.61</td><td>$0.79</td><td>2.03x</td></tr>
-<tr><td>Exclude first call</td><td>Drops the most visibly cache-contaminated first call from both sessions.</td><td>$1.41</td><td>$0.75</td><td>1.87x</td></tr>
-<tr><td>Exclude first two calls</td><td>Drops the period where the two sessions had the largest cache warmup difference.</td><td>$1.20</td><td>$0.70</td><td>1.71x</td></tr>
-<tr><td>Normalize percent-cell first call</td><td>Reclassifies Confucius call 1 as if it had Carson&#x27;s 4,992-token first-call cache hit.</td><td>$1.61</td><td>$0.96</td><td>1.68x</td></tr>
-<tr><td>Normalize percent-cell first two calls</td><td>Reclassifies Confucius calls 1-2 as if they had Carson&#x27;s 4,992-token early cache hit.</td><td>$1.61</td><td>$1.12</td><td>1.44x</td></tr>
-    </tbody>
-  </table>
-
-  <h2>Finding 5: Workflow Burden</h2>
-  <p>The notebook worker made 36 classified tool calls; the percent-cell worker made 22. Notebook-specific overhead included structure validation, notebook execution, and extraction of saved cell outputs.</p>
-  <table>
-    <thead><tr><th>Workflow</th><th>Tool-call category</th><th>Count</th></tr></thead>
-    <tbody><tr><td>direct ipynb</td><td>direct notebook edit</td><td>6</td></tr>
+  <section id="controlled" class="tab-panel">
+    <h2>Controlled Direct-Edit Comparison</h2>
+    <div class="abstract">
+      <p>This section isolates the file-format question as closely as this experiment allowed. Two subagents were given the same data, the same analysis question, and similar deliverable requirements; the main intended difference was whether the durable working source was an <code>.ipynb</code> notebook or a percent-cell <code>.py</code> file.</p>
+      <p>The notebook worker edited an existing notebook, executed it, and inspected saved notebook outputs. The percent-cell worker edited an equivalent Python file and inspected terminal or saved outputs. This comparison is the strongest evidence in the report because it controls the task framing more tightly than the agent-native run.</p>
+    </div>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Total tokens</th><th>Fresh input</th><th>Model calls</th><th>Runtime</th><th>Observed cost</th><th>Source artifact tokens</th></tr></thead>
+      <tbody><tr><td>Direct .ipynb</td><td>Carson</td><td>1,395,748</td><td>129,036</td><td>24</td><td>8m 30s</td><td>$1.61</td><td>84,753</td></tr>
+<tr><td>Percent-cell .py</td><td>Confucius</td><td>719,688</td><td>51,000</td><td>14</td><td>3m 40s</td><td>$0.79</td><td>1,653</td></tr></tbody>
+    </table>
+    <div id="controlled-ratio-chart" class="chart"></div>
+    <p class="figure-caption"><strong>Figure:</strong> Controlled direct-edit notebook-to-percent-cell ratios across task metrics. <strong>Takeaway:</strong> the notebook worker required more calls, more elapsed time, more total tokens, and more fresh input than the percent-cell worker.</p>
+    <div class="keep-block">
+      <h3>Tool-Call Categories</h3>
+      <p class="small">Categories group similar work, so source edits or output inspections do not need to use identical commands to be compared.</p>
+      <div id="controlled-tool-category-chart" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Broad tool-call categories for the controlled comparison. <strong>Takeaway:</strong> the notebook workflow added notebook-specific structure validation and more output-inspection work, which helps explain the higher call count.</p>
+    </div>
+    <h3>Per-Call Token Delta</h3>
+    <div class="keep-block">
+      <p class="chart-label">Direct .ipynb workflow</p>
+      <div id="controlled-delta-1" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Per-call token delta for the controlled notebook worker. <strong>Takeaway:</strong> the notebook run kept accumulating large per-call context as the task progressed.</p>
+    </div>
+    <div class="keep-block">
+      <p class="chart-label">Percent-cell .py workflow</p>
+      <div id="controlled-delta-2" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Per-call token delta for the controlled percent-cell worker. <strong>Takeaway:</strong> the percent-cell run had fewer calls overall, shortening the cumulative token path through the task.</p>
+    </div>
+    <h3>Input Composition</h3>
+    <div class="keep-block">
+      <p class="chart-label">Direct .ipynb workflow</p>
+      <div id="controlled-input-1" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Cached and fresh input tokens by model call for the controlled notebook worker. <strong>Takeaway:</strong> most later input was cached, but the notebook run still paid for repeated long context and several fresh-input spikes.</p>
+    </div>
+    <div class="keep-block">
+      <p class="chart-label">Percent-cell .py workflow</p>
+      <div id="controlled-input-2" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Cached and fresh input tokens by model call for the controlled percent-cell worker. <strong>Takeaway:</strong> the percent-cell workflow had fewer model calls and less cumulative fresh input.</p>
+    </div>
+    <h3>Tool-Call Category Table</h3>
+    <table>
+      <thead><tr><th>Workflow</th><th>Category</th><th>Tool calls</th></tr></thead>
+      <tbody><tr><td>direct ipynb</td><td>direct notebook edit</td><td>6</td></tr>
 <tr><td>direct ipynb</td><td>environment check</td><td>1</td></tr>
 <tr><td>direct ipynb</td><td>filesystem/navigation</td><td>4</td></tr>
 <tr><td>direct ipynb</td><td>final status check</td><td>1</td></tr>
@@ -222,23 +312,119 @@
 <tr><td>percent-cell py</td><td>percent-cell source edit</td><td>5</td></tr>
 <tr><td>percent-cell py</td><td>percent-cell source inspection</td><td>3</td></tr>
 <tr><td>percent-cell py</td><td>schema reference</td><td>1</td></tr></tbody>
-  </table>
+    </table>
+  </section>
 
-  <h2>Conclusion</h2>
-  <p>The evidence supports percent-cell Python as the better default durable format for agent-assisted analysis when a notebook is not itself the required deliverable. Percent-cell Python preserves cell-based execution and readable analysis structure while keeping the agent's working source smaller and separating code from generated output artifacts.</p>
-  <p>The stronger claim is not "never use notebooks." It is that direct notebook editing can impose substantial overhead on coding agents because the agent must manage both source code and execution state.</p>
+  <section id="native" class="tab-panel">
+    <h2>Agent-Native Comparison</h2>
+    <div class="abstract">
+      <p>This section uses the earlier, less constrained paired run to ask what happens when the notebook worker is allowed to follow a more natural agent workflow. That notebook workflow included generating notebook structure, executing with notebook tooling, inspecting saved outputs, patching, and rerunning notebook artifacts.</p>
+      <p>Because the workers had more freedom, this run is less controlled than the direct-edit comparison. Its value is corroboration: it tests whether the same direction appears when the notebook worker behaves more like an unconstrained coding agent might behave in practice.</p>
+    </div>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Total tokens</th><th>Fresh input</th><th>Model calls</th><th>Runtime</th><th>Observed cost</th><th>Source artifact tokens</th></tr></thead>
+      <tbody><tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>1,730,973</td><td>122,627</td><td>25</td><td>10m 29s</td><td>$1.68</td><td>81,758</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>1,091,505</td><td>83,054</td><td>20</td><td>4m 44s</td><td>$1.22</td><td>1,734</td></tr></tbody>
+    </table>
+    <div id="native-ratio-chart" class="chart"></div>
+    <p class="figure-caption"><strong>Figure:</strong> Agent-native notebook-to-percent-cell ratios across task metrics. <strong>Takeaway:</strong> even in the less constrained run, the notebook workflow used more total tokens, more model calls, more time, and higher estimated cost.</p>
+    <div class="keep-block">
+      <h3>Tool-Call Categories</h3>
+      <p class="small">The agent-native logs mostly expose shell and patch tools, so this chart uses broad command-intent categories.</p>
+      <div id="native-tool-category-chart" class="chart"></div>
+      <p class="figure-caption"><strong>Figure:</strong> Broad command-intent categories for the agent-native comparison. <strong>Takeaway:</strong> the agent-native notebook run spent more calls on setup/status and output or execution handling, while broad edit and report-writing work was similar in scale.</p>
+    </div>
+    <h3>Raw Tool Calls</h3>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Tool</th><th>Calls</th></tr></thead>
+      <tbody><tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>apply_patch</td><td>5</td></tr>
+<tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>exec_command</td><td>30</td></tr>
+<tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>write_stdin</td><td>1</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>apply_patch</td><td>7</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>exec_command</td><td>27</td></tr></tbody>
+    </table>
+  </section>
 
-  <h2>Appendix</h2>
-  <h3>Token interpretation</h3>
-  <p><code>total_tokens</code> is cumulative accounting across model calls, not unique text. For each call, <code>input_tokens = cached_input_tokens + non_cached_input_tokens</code>, and <code>total_tokens = input_tokens + output_tokens</code>. Cached input is not free and is still included in total tokens, but it is priced lower and likely reflects reused prompt-prefix work.</p>
-  <p class="small">For energy or compute interpretation, neither raw total tokens nor fresh input alone is perfect. Total tokens can overstate new work because cached input is included; fresh input can understate total work because cached input and output are not zero-cost. API-equivalent cost is a practical weighted proxy, not a direct energy measurement.</p>
+  <section id="cache" class="tab-panel">
+    <h2>Cache And Cost Notes</h2>
+    <div class="abstract">
+      <p>This section separates total session traffic from cache-sensitive cost estimates. The raw token totals show how much input and output accumulated across model calls. API-equivalent cost depends on how much input was classified as fresh versus cached, which varied across first calls in a way that should not be over-interpreted as a file-format effect.</p>
+      <p>The normalization table treats the notebook first calls as if they had the same common first-call cache pattern seen in the percent-cell runs. This sensitivity check helps show whether the conclusion depends entirely on the first-call cache difference.</p>
+    </div>
+    <p>Prompt caching changes the split between fresh and cached input. It does not change total input tokens, but it does affect estimated API cost. In these runs, the percent-cell first calls commonly had about 43K input tokens with about 41K cached, while the notebook first calls had similar input length but only about 5K cached.</p>
+    <p>The table below normalizes each notebook first call to the common 41,344 cached-token first-call pattern as a sensitivity check rather than a claim about what billing should have been.</p>
+    <table>
+      <thead><tr><th>Comparison</th><th>Pair</th><th>Observed cost ratio</th><th>Normalized fresh-input ratio</th><th>Normalized cost ratio</th></tr></thead>
+      <tbody><tr><td>Agent-native</td><td>Agent-native executed .ipynb / Agent-native percent-cell .py</td><td>1.38x</td><td>1.04x</td><td>1.25x</td></tr>
+<tr><td>Controlled direct-edit</td><td>Direct .ipynb / Percent-cell .py</td><td>2.03x</td><td>1.82x</td><td>1.82x</td></tr></tbody>
+    </table>
+    <div id="cache-ratio-chart" class="chart"></div>
+    <p class="figure-caption"><strong>Figure:</strong> Observed cost ratios compared with ratios after normalizing notebook first-call cache behavior. <strong>Takeaway:</strong> notebook workflows remain more expensive under this sensitivity check, but the multiplier shrinks when the first-call cache imbalance is reduced.</p>
+    <p class="small">Interpretation: cost likely moves in the same direction as total tokens and model calls, but the exact cost ratio is less stable than the workflow-turn evidence.</p>
+  </section>
 
-  <h3>Exact Starting Prompts</h3>
-  <p>The shared injected project context was identical across both worker sessions. The task-specific prompts below are the experimental prompts that differed by assigned file format and workflow.</p>
+  <section id="appendix" class="tab-panel">
+    <h2>Appendix</h2>
+    <div class="abstract">
+      <p>This section documents how the report can be audited and rebuilt. The HTML is generated from package-local CSV files and raw Codex JSONL logs; the exact worker prompts are included so readers can inspect the starting conditions for each subagent.</p>
+    </div>
+    <h3>Reproducibility</h3>
+    <p>The page is generated by <code>scripts/build_report.py</code> from CSV files and raw JSONL logs included in this package. Plotly is vendored at <code>assets/plotly-2.35.2.min.js</code>.</p>
+    <h3>Token Interpretation</h3>
+    <p><code>total_tokens</code> is cumulative accounting across model calls, not unique text. For each call, <code>input_tokens = cached_input_tokens + non_cached_input_tokens</code>, and <code>total_tokens = input_tokens + output_tokens</code>.</p>
+    <h3>Exact Starting Prompts</h3>
+    <p>The names below are internal worker/log labels preserved so the raw JSONL logs, CSV rows, and prompts can be cross-checked.</p>
+    <details><summary>Boyle: agent-native notebook prompt</summary><pre>You are Worker A in a controlled format-efficiency experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope, and adjust only within your own directory.
 
-  <details>
-    <summary>Carson: direct notebook workflow prompt</summary>
-    <pre>You are Worker C in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/notebook-agent/
+
+Task: Create a small but realistic analysis session as a Jupyter notebook. The goal is to simulate working with a human analyst who wants to see intermediate notebook cell outputs while the analysis evolves.
+
+Use this dataset reference first: seattle-public-library/README.md. For the actual analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Deliverables in your assigned directory:
+1. analysis-notebook.ipynb with 5-8 clear cells, including markdown explanation, intermediate displayed outputs, and at least one plot output. Execute the notebook so outputs are saved.
+2. reports/analysis-report.md: concise markdown report with procedure, checks, findings, conclusion, and references to saved assets.
+3. reports/assets/: save at least one chart as SVG or PNG and one CSV summary table.
+4. run-log.md: brief note describing how you executed cells and any issues.
+
+Style constraints:
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Do not do unrelated exploration.
+- Use .venv/bin/python or tools inside .venv only.
+
+Final response: list changed files, execution command(s), and a short summary of findings.</pre></details>
+    <details><summary>Laplace: agent-native percent-cell prompt</summary><pre>You are Worker B in a controlled format-efficiency experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope, and adjust only within your own directory.
+
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/py-cell-agent/
+
+Task: Create a small but realistic analysis session as a VS Code percent-cell Python file. The goal is to simulate working with a human analyst who wants to run intermediate cells and see outputs while the analysis evolves, but without storing notebook JSON output blobs in the source file.
+
+Use this dataset reference first: seattle-public-library/README.md. For the actual analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Deliverables in your assigned directory:
+1. analysis-cells.py using VS Code/Jupyter percent-cell format with 5-8 clear cells, including markdown cells and intermediate print/display statements suitable for a human to run cell-by-cell in VS Code.
+2. reports/analysis-report.md: concise markdown report with procedure, checks, findings, conclusion, and references to saved assets.
+3. reports/assets/: save at least one chart as SVG or PNG and one CSV summary table.
+4. run-log.md: brief note describing how you executed the cells/script and any issues. Since .py cell outputs are not saved in the source file, include a compact transcript of important intermediate outputs in the run log or report.
+
+Style constraints:
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Do not do unrelated exploration.
+- Use .venv/bin/python only.
+
+Final response: list changed files, execution command(s), and a short summary of findings.</pre></details>
+    <details><summary>Carson: direct notebook prompt</summary><pre>You are Worker C in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
 
 Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
 Assigned write scope only: agent-format-experiment/direct-notebook-agent/
@@ -267,12 +453,8 @@ Constraints:
 - Use complete years only, requiring 12 months for both physical and digital.
 - Keep the notebook concise: 5-9 cells.
 
-Final response: list changed files, execution commands, output cells inspected, and a short summary of findings.</pre>
-  </details>
-
-  <details>
-    <summary>Confucius: percent-cell Python workflow prompt</summary>
-    <pre>You are Worker D in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
+Final response: list changed files, execution commands, output cells inspected, and a short summary of findings.</pre></details>
+    <details><summary>Confucius: direct percent-cell prompt</summary><pre>You are Worker D in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
 
 Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
 Assigned write scope only: agent-format-experiment/direct-py-cell-agent/
@@ -301,78 +483,173 @@ Constraints:
 - Use complete years only, requiring 12 months for both physical and digital.
 - Keep the percent-cell file concise: 5-9 cells.
 
-Final response: list changed files, execution commands, outputs inspected, and a short summary of findings.</pre>
-  </details>
-
-  <h3>Reproducibility</h3>
-  <p>The HTML report can be regenerated from the repository package with <code>python scripts/build_report.py</code>. Plotly is vendored with the site, so the page does not depend on a CDN for the interactive figures.</p>
+Final response: list changed files, execution commands, outputs inspected, and a short summary of findings.</pre></details>
+  </section>
 </main>
 
 <script>
-const chartSpecs = [{"rank": 1, "agent": "Carson", "workflow": "Direct .ipynb", "turns": [{"turn": 1, "delta": 43527, "cumulative": 43527, "input": 43241, "cached_input": 4992, "fresh_input": 38249, "output": 286, "tool_calls": 3, "tools": "exec_command:3"}, {"turn": 2, "delta": 45099, "cumulative": 88626, "input": 44729, "cached_input": 4992, "fresh_input": 39737, "output": 370, "tool_calls": 3, "tools": "exec_command:3"}, {"turn": 3, "delta": 46446, "cumulative": 135072, "input": 45411, "cached_input": 42880, "fresh_input": 2531, "output": 1035, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 4, "delta": 47726, "cumulative": 182798, "input": 46986, "cached_input": 44928, "fresh_input": 2058, "output": 740, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 5, "delta": 47932, "cumulative": 230730, "input": 47773, "cached_input": 46976, "fresh_input": 797, "output": 159, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 6, "delta": 50377, "cumulative": 281107, "input": 48054, "cached_input": 44416, "fresh_input": 3638, "output": 2323, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 7, "delta": 50682, "cumulative": 331789, "input": 50422, "cached_input": 48000, "fresh_input": 2422, "output": 260, "tool_calls": 2, "tools": "exec_command:2"}, {"turn": 8, "delta": 51197, "cumulative": 382986, "input": 51077, "cached_input": 47488, "fresh_input": 3589, "output": 120, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 9, "delta": 53802, "cumulative": 436788, "input": 53616, "cached_input": 51072, "fresh_input": 2544, "output": 186, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 10, "delta": 58259, "cumulative": 495047, "input": 58073, "cached_input": 53120, "fresh_input": 4953, "output": 186, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 11, "delta": 59184, "cumulative": 554231, "input": 58304, "cached_input": 50048, "fresh_input": 8256, "output": 880, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 12, "delta": 59449, "cumulative": 613680, "input": 59230, "cached_input": 57728, "fresh_input": 1502, "output": 219, "tool_calls": 2, "tools": "exec_command:2"}, {"turn": 13, "delta": 60840, "cumulative": 674520, "input": 60639, "cached_input": 58752, "fresh_input": 1887, "output": 201, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 14, "delta": 61452, "cumulative": 735972, "input": 60978, "cached_input": 58240, "fresh_input": 2738, "output": 474, "tool_calls": 4, "tools": "exec_command:4"}, {"turn": 15, "delta": 63546, "cumulative": 799518, "input": 63401, "cached_input": 60288, "fresh_input": 3113, "output": 145, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 16, "delta": 63820, "cumulative": 863338, "input": 63623, "cached_input": 60800, "fresh_input": 2823, "output": 197, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 17, "delta": 64048, "cumulative": 927386, "input": 63918, "cached_input": 63360, "fresh_input": 558, "output": 130, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 18, "delta": 65322, "cumulative": 992708, "input": 64411, "cached_input": 63872, "fresh_input": 539, "output": 911, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 19, "delta": 65553, "cumulative": 1058261, "input": 65367, "cached_input": 63360, "fresh_input": 2007, "output": 186, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 20, "delta": 65961, "cumulative": 1124222, "input": 65691, "cached_input": 64896, "fresh_input": 795, "output": 270, "tool_calls": 3, "tools": "exec_command:3"}, {"turn": 21, "delta": 66847, "cumulative": 1191069, "input": 66319, "cached_input": 65408, "fresh_input": 911, "output": 528, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 22, "delta": 67583, "cumulative": 1258652, "input": 66891, "cached_input": 65920, "fresh_input": 971, "output": 692, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 23, "delta": 68022, "cumulative": 1326674, "input": 67631, "cached_input": 66432, "fresh_input": 1199, "output": 391, "tool_calls": 3, "tools": "exec_command:3"}, {"turn": 24, "delta": 69074, "cumulative": 1395748, "input": 68675, "cached_input": 67456, "fresh_input": 1219, "output": 399, "tool_calls": 0, "tools": ""}]}, {"rank": 2, "agent": "Confucius", "workflow": "Percent-cell .py", "turns": [{"turn": 1, "delta": 43539, "cumulative": 43539, "input": 43193, "cached_input": 41344, "fresh_input": 1849, "output": 346, "tool_calls": 4, "tools": "exec_command:4"}, {"turn": 2, "delta": 45206, "cumulative": 88745, "input": 44710, "cached_input": 41344, "fresh_input": 3366, "output": 496, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 3, "delta": 45387, "cumulative": 134132, "input": 45275, "cached_input": 44416, "fresh_input": 859, "output": 112, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 4, "delta": 46593, "cumulative": 180725, "input": 45768, "cached_input": 44928, "fresh_input": 840, "output": 825, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 5, "delta": 46775, "cumulative": 227500, "input": 46662, "cached_input": 45440, "fresh_input": 1222, "output": 113, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 6, "delta": 49566, "cumulative": 277066, "input": 48215, "cached_input": 46464, "fresh_input": 1751, "output": 1351, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 7, "delta": 49753, "cumulative": 326819, "input": 49635, "cached_input": 48000, "fresh_input": 1635, "output": 118, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 8, "delta": 52265, "cumulative": 379084, "input": 51576, "cached_input": 42880, "fresh_input": 8696, "output": 689, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 9, "delta": 52448, "cumulative": 431532, "input": 52334, "cached_input": 49536, "fresh_input": 2798, "output": 114, "tool_calls": 1, "tools": "exec_command:1"}, {"turn": 10, "delta": 54521, "cumulative": 486053, "input": 54131, "cached_input": 51072, "fresh_input": 3059, "output": 390, "tool_calls": 4, "tools": "exec_command:4"}, {"turn": 11, "delta": 55441, "cumulative": 541494, "input": 55380, "cached_input": 53632, "fresh_input": 1748, "output": 61, "tool_calls": 1, "tools": "view_image:1"}, {"turn": 12, "delta": 58130, "cumulative": 599624, "input": 57093, "cached_input": 38272, "fresh_input": 18821, "output": 1037, "tool_calls": 1, "tools": "apply_patch:1"}, {"turn": 13, "delta": 58623, "cumulative": 658247, "input": 58197, "cached_input": 56704, "fresh_input": 1493, "output": 426, "tool_calls": 4, "tools": "exec_command:4"}, {"turn": 14, "delta": 61441, "cumulative": 719688, "input": 60591, "cached_input": 57728, "fresh_input": 2863, "output": 850, "tool_calls": 0, "tools": ""}]}];
-const costRows = [{"agent": "Carson", "format": "direct ipynb edit plus execute plus targeted notebook output inspection", "session_id": "019ec69e-fa32-7283-b6c6-fc26f2e1d8d8", "model": "GPT-5.5", "input_tokens": "1384460", "cached_input_tokens": "1255424", "non_cached_input_tokens": "129036", "output_tokens": "11288", "input_rate_per_1m": "5.0", "cached_input_rate_per_1m": "0.5", "output_rate_per_1m": "30.0", "non_cached_input_cost_usd": "0.64518", "cached_input_cost_usd": "0.627712", "output_cost_usd": "0.33864", "total_cost_usd": "1.611532"}, {"agent": "Confucius", "format": "direct percent-cell py edit plus execute plus targeted output inspection", "session_id": "019ec69f-3714-7170-8901-7d4a0f4d47bb", "model": "GPT-5.5", "input_tokens": "712760", "cached_input_tokens": "661760", "non_cached_input_tokens": "51000", "output_tokens": "6928", "input_rate_per_1m": "5.0", "cached_input_rate_per_1m": "0.5", "output_rate_per_1m": "30.0", "non_cached_input_cost_usd": "0.255", "cached_input_cost_usd": "0.33088", "output_cost_usd": "0.20784", "total_cost_usd": "0.79372"}];
+const reportData = {"allUsage": {"Boyle": {"agent": "Boyle", "workflow": "Agent-native executed .ipynb", "total_tokens": 1730973, "input_tokens": 1721987, "cached_input_tokens": 1599360, "non_cached_input_tokens": 122627, "output_tokens": 8986, "duration_ms": 629326, "duration": "10m 29s", "model_calls": 25, "observed_cost": 1.682395, "artifact_tokens": 81758}, "Laplace": {"agent": "Laplace", "workflow": "Agent-native percent-cell .py", "total_tokens": 1091505, "input_tokens": 1081454, "cached_input_tokens": 998400, "non_cached_input_tokens": 83054, "output_tokens": 10051, "duration_ms": 284453, "duration": "4m 44s", "model_calls": 20, "observed_cost": 1.216, "artifact_tokens": 1734}, "Carson": {"agent": "Carson", "workflow": "Direct .ipynb", "total_tokens": 1395748, "input_tokens": 1384460, "cached_input_tokens": 1255424, "non_cached_input_tokens": 129036, "output_tokens": 11288, "duration_ms": 509812, "duration": "8m 30s", "model_calls": 24, "observed_cost": 1.611532, "artifact_tokens": 84753}, "Confucius": {"agent": "Confucius", "workflow": "Percent-cell .py", "total_tokens": 719688, "input_tokens": 712760, "cached_input_tokens": 661760, "non_cached_input_tokens": 51000, "output_tokens": 6928, "duration_ms": 219893, "duration": "3m 40s", "model_calls": 14, "observed_cost": 0.79372, "artifact_tokens": 1653}}, "overviewRatios": [{"comparison": "Agent-native", "total_tokens": 1.5858589745351601, "model_calls": 1.25, "runtime": 2.21240767367544, "observed_cost": 1.3835485197368422, "normalized_cost": 1.2490222039473684}, {"comparison": "Controlled direct-edit", "total_tokens": 1.9393792865797401, "model_calls": 1.7142857142857142, "runtime": 2.318454884875826, "observed_cost": 2.0303532731945775, "normalized_cost": 1.8242554049286903}], "controlledTurnSpecs": [{"rank": 1, "agent": "Carson", "workflow": "Direct .ipynb", "turns": [{"turn": 1, "delta": 43527, "input": 43241, "cached_input": 4992, "fresh_input": 38249, "output": 286}, {"turn": 2, "delta": 45099, "input": 44729, "cached_input": 4992, "fresh_input": 39737, "output": 370}, {"turn": 3, "delta": 46446, "input": 45411, "cached_input": 42880, "fresh_input": 2531, "output": 1035}, {"turn": 4, "delta": 47726, "input": 46986, "cached_input": 44928, "fresh_input": 2058, "output": 740}, {"turn": 5, "delta": 47932, "input": 47773, "cached_input": 46976, "fresh_input": 797, "output": 159}, {"turn": 6, "delta": 50377, "input": 48054, "cached_input": 44416, "fresh_input": 3638, "output": 2323}, {"turn": 7, "delta": 50682, "input": 50422, "cached_input": 48000, "fresh_input": 2422, "output": 260}, {"turn": 8, "delta": 51197, "input": 51077, "cached_input": 47488, "fresh_input": 3589, "output": 120}, {"turn": 9, "delta": 53802, "input": 53616, "cached_input": 51072, "fresh_input": 2544, "output": 186}, {"turn": 10, "delta": 58259, "input": 58073, "cached_input": 53120, "fresh_input": 4953, "output": 186}, {"turn": 11, "delta": 59184, "input": 58304, "cached_input": 50048, "fresh_input": 8256, "output": 880}, {"turn": 12, "delta": 59449, "input": 59230, "cached_input": 57728, "fresh_input": 1502, "output": 219}, {"turn": 13, "delta": 60840, "input": 60639, "cached_input": 58752, "fresh_input": 1887, "output": 201}, {"turn": 14, "delta": 61452, "input": 60978, "cached_input": 58240, "fresh_input": 2738, "output": 474}, {"turn": 15, "delta": 63546, "input": 63401, "cached_input": 60288, "fresh_input": 3113, "output": 145}, {"turn": 16, "delta": 63820, "input": 63623, "cached_input": 60800, "fresh_input": 2823, "output": 197}, {"turn": 17, "delta": 64048, "input": 63918, "cached_input": 63360, "fresh_input": 558, "output": 130}, {"turn": 18, "delta": 65322, "input": 64411, "cached_input": 63872, "fresh_input": 539, "output": 911}, {"turn": 19, "delta": 65553, "input": 65367, "cached_input": 63360, "fresh_input": 2007, "output": 186}, {"turn": 20, "delta": 65961, "input": 65691, "cached_input": 64896, "fresh_input": 795, "output": 270}, {"turn": 21, "delta": 66847, "input": 66319, "cached_input": 65408, "fresh_input": 911, "output": 528}, {"turn": 22, "delta": 67583, "input": 66891, "cached_input": 65920, "fresh_input": 971, "output": 692}, {"turn": 23, "delta": 68022, "input": 67631, "cached_input": 66432, "fresh_input": 1199, "output": 391}, {"turn": 24, "delta": 69074, "input": 68675, "cached_input": 67456, "fresh_input": 1219, "output": 399}]}, {"rank": 2, "agent": "Confucius", "workflow": "Percent-cell .py", "turns": [{"turn": 1, "delta": 43539, "input": 43193, "cached_input": 41344, "fresh_input": 1849, "output": 346}, {"turn": 2, "delta": 45206, "input": 44710, "cached_input": 41344, "fresh_input": 3366, "output": 496}, {"turn": 3, "delta": 45387, "input": 45275, "cached_input": 44416, "fresh_input": 859, "output": 112}, {"turn": 4, "delta": 46593, "input": 45768, "cached_input": 44928, "fresh_input": 840, "output": 825}, {"turn": 5, "delta": 46775, "input": 46662, "cached_input": 45440, "fresh_input": 1222, "output": 113}, {"turn": 6, "delta": 49566, "input": 48215, "cached_input": 46464, "fresh_input": 1751, "output": 1351}, {"turn": 7, "delta": 49753, "input": 49635, "cached_input": 48000, "fresh_input": 1635, "output": 118}, {"turn": 8, "delta": 52265, "input": 51576, "cached_input": 42880, "fresh_input": 8696, "output": 689}, {"turn": 9, "delta": 52448, "input": 52334, "cached_input": 49536, "fresh_input": 2798, "output": 114}, {"turn": 10, "delta": 54521, "input": 54131, "cached_input": 51072, "fresh_input": 3059, "output": 390}, {"turn": 11, "delta": 55441, "input": 55380, "cached_input": 53632, "fresh_input": 1748, "output": 61}, {"turn": 12, "delta": 58130, "input": 57093, "cached_input": 38272, "fresh_input": 18821, "output": 1037}, {"turn": 13, "delta": 58623, "input": 58197, "cached_input": 56704, "fresh_input": 1493, "output": 426}, {"turn": 14, "delta": 61441, "input": 60591, "cached_input": 57728, "fresh_input": 2863, "output": 850}]}], "controlledToolCategories": [{"workflow": "Direct .ipynb", "category": "Execution", "count": 4}, {"workflow": "Direct .ipynb", "category": "Notebook structure validation", "count": 6}, {"workflow": "Direct .ipynb", "category": "Output inspection", "count": 12}, {"workflow": "Direct .ipynb", "category": "Report/log writing", "count": 1}, {"workflow": "Direct .ipynb", "category": "Setup, schema, or status", "count": 7}, {"workflow": "Direct .ipynb", "category": "Source edit", "count": 6}, {"workflow": "Percent-cell .py", "category": "Execution", "count": 4}, {"workflow": "Percent-cell .py", "category": "Output inspection", "count": 5}, {"workflow": "Percent-cell .py", "category": "Setup, schema, or status", "count": 5}, {"workflow": "Percent-cell .py", "category": "Source edit", "count": 5}, {"workflow": "Percent-cell .py", "category": "Source inspection", "count": 3}], "nativeToolCategories": [{"workflow": "Agent-native executed .ipynb", "category": "Execution", "count": 10}, {"workflow": "Agent-native executed .ipynb", "category": "Output inspection", "count": 3}, {"workflow": "Agent-native executed .ipynb", "category": "Report/log writing", "count": 2}, {"workflow": "Agent-native executed .ipynb", "category": "Setup, schema, or status", "count": 15}, {"workflow": "Agent-native executed .ipynb", "category": "Source edit", "count": 3}, {"workflow": "Agent-native executed .ipynb", "category": "Source inspection", "count": 3}, {"workflow": "Agent-native percent-cell .py", "category": "Execution", "count": 11}, {"workflow": "Agent-native percent-cell .py", "category": "Output inspection", "count": 2}, {"workflow": "Agent-native percent-cell .py", "category": "Report/log writing", "count": 2}, {"workflow": "Agent-native percent-cell .py", "category": "Setup, schema, or status", "count": 12}, {"workflow": "Agent-native percent-cell .py", "category": "Source edit", "count": 5}, {"workflow": "Agent-native percent-cell .py", "category": "Source inspection", "count": 2}], "pairRatioSummaries": {"Agent-native": [{"metric": "Total tokens", "ratio": 1.5858589745351601}, {"metric": "Fresh input", "ratio": 1.4764731379584366}, {"metric": "Output tokens", "ratio": 0.8940403939906477}, {"metric": "Model calls", "ratio": 1.25}, {"metric": "Runtime", "ratio": 2.21240767367544}, {"metric": "Observed cost", "ratio": 1.3835485197368422}, {"metric": "Normalized cost", "ratio": 1.2490222039473684}], "Controlled direct-edit": [{"metric": "Total tokens", "ratio": 1.9393792865797401}, {"metric": "Fresh input", "ratio": 2.5301176470588236}, {"metric": "Output tokens", "ratio": 1.6293302540415704}, {"metric": "Model calls", "ratio": 1.7142857142857142}, {"metric": "Runtime", "ratio": 2.318454884875826}, {"metric": "Observed cost", "ratio": 2.0303532731945775}, {"metric": "Normalized cost", "ratio": 1.8242554049286903}]}, "pairs": [{"label": "Agent-native", "notebook": "Boyle", "py": "Laplace"}, {"label": "Controlled direct-edit", "notebook": "Carson", "py": "Confucius"}]};
 
-function workflowColor(workflow) {
-  return workflow === "Direct .ipynb" ? "#012169" : "#c84e00";
+function workflowColor(name) {
+  return name.includes("ipynb") || name.includes("notebook") || name === "Boyle" || name === "Carson" ? "#012169" : "#c84e00";
 }
 
-function makeFootprintChart() {
-  for (const spec of chartSpecs) {
-    const callLabels = spec.turns.map(row => String(row.turn));
-    const traces = [
-      {
-        type: "bar",
-        name: "Token delta",
-        x: callLabels,
-        y: spec.turns.map(row => row.delta),
-        marker: { color: workflowColor(spec.workflow), opacity: 0.7 },
-        hovertemplate: spec.workflow + "<br>Call %{x}<br>Token delta: %{y:,}<extra></extra>"
-      },
-      {
-        type: "scatter",
-        mode: "lines+markers",
-        name: "Cumulative total",
-        x: callLabels,
-        y: spec.turns.map(row => row.cumulative),
-        yaxis: "y2",
-        line: { color: "#262626", width: 3 },
-        marker: { size: 7 },
-        hovertemplate: spec.workflow + "<br>Call %{x}<br>Cumulative: %{y:,}<extra></extra>"
-      }
-    ];
-    Plotly.newPlot("footprint-chart-" + spec.rank, traces, {
-      hovermode: "closest",
+function ratioChart() {
+  const labels = reportData.pairs.map(row => row.label);
+  const notebookAgents = reportData.pairs.map(row => row.notebook);
+  const pyAgents = reportData.pairs.map(row => row.py);
+  const notebookWorkflows = notebookAgents.map(agent => reportData.allUsage[agent].workflow);
+  const pyWorkflows = pyAgents.map(agent => reportData.allUsage[agent].workflow);
+  const traces = [
+    {
+      type: "bar",
+      name: "Notebook workflow",
+      x: labels,
+      y: notebookAgents.map(agent => reportData.allUsage[agent].total_tokens),
+      marker: { color: "#012169", opacity: 0.82 },
+      customdata: notebookWorkflows,
+      hovertemplate: "%{customdata}<br>%{x}<br>Total tokens: %{y:,}<extra></extra>"
+    },
+    {
+      type: "bar",
+      name: "Percent-cell workflow",
+      x: labels,
+      y: pyAgents.map(agent => reportData.allUsage[agent].total_tokens),
+      marker: { color: "#c84e00", opacity: 0.82 },
+      customdata: pyWorkflows,
+      hovertemplate: "%{customdata}<br>%{x}<br>Total tokens: %{y:,}<extra></extra>"
+    }
+  ];
+  Plotly.newPlot("overview-ratio-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Total task tokens" },
+    xaxis: { title: "Experiment" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 80, r: 30, t: 35, b: 70 }
+  }, { responsive: true });
+}
+
+function overviewRatioChart() {
+  const metrics = ["total_tokens", "model_calls", "runtime", "observed_cost", "normalized_cost"];
+  const labels = ["Total tokens", "Model calls", "Runtime", "Observed cost", "Normalized cost"];
+  const traces = reportData.overviewRatios.map(row => ({
+    type: "bar",
+    name: row.comparison,
+    x: labels,
+    y: metrics.map(metric => row[metric]),
+    marker: { color: row.comparison === "Controlled direct-edit" ? "#012169" : "#339898" },
+    hovertemplate: row.comparison + "<br>%{x}: %{y:.2f}x<extra></extra>"
+  }));
+  Plotly.newPlot("overview-total-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Notebook / percent-cell ratio" },
+    xaxis: { title: "Metric" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 70, r: 30, t: 35, b: 70 }
+  }, { responsive: true });
+}
+
+function pairRatioChart(divId, comparisonLabel) {
+  const rows = reportData.pairRatioSummaries[comparisonLabel];
+  const traces = [{
+    type: "bar",
+    name: "Notebook / percent-cell",
+    x: rows.map(row => row.metric),
+    y: rows.map(row => row.ratio),
+    marker: { color: rows.map(row => row.metric === "Normalized cost" ? "#339898" : "#012169"), opacity: 0.82 },
+    hovertemplate: "%{x}<br>Ratio: %{y:.2f}x<extra></extra>"
+  }];
+  Plotly.newPlot(divId, traces, {
+    yaxis: { title: "Notebook / percent-cell ratio" },
+    xaxis: { title: "Metric" },
+    shapes: [{
+      type: "line",
+      xref: "paper",
+      x0: 0,
+      x1: 1,
+      y0: 1,
+      y1: 1,
+      line: { color: "#666", width: 1, dash: "dot" }
+    }],
+    annotations: [{
+      xref: "paper",
+      yref: "y",
+      x: 1,
+      y: 1,
+      text: "parity",
+      showarrow: false,
+      xanchor: "right",
+      yanchor: "bottom",
+      font: { size: 12, color: "#555" }
+    }],
+    showlegend: false,
+    margin: { l: 80, r: 30, t: 35, b: 75 }
+  }, { responsive: true });
+}
+
+function toolCategoryChart(divId, rows) {
+  const categories = Array.from(new Set(rows.map(row => row.category))).sort();
+  const workflows = Array.from(new Set(rows.map(row => row.workflow)));
+  const traces = workflows.map(workflow => ({
+    type: "bar",
+    orientation: "h",
+    name: workflow,
+    y: categories,
+    x: categories.map(category => {
+      const match = rows.find(row => row.workflow === workflow && row.category === category);
+      return match ? match.count : 0;
+    }),
+    marker: { color: workflowColor(workflow), opacity: 0.82 },
+    hovertemplate: workflow + "<br>%{y}: %{x} calls<extra></extra>"
+  }));
+  Plotly.newPlot(divId, traces, {
+    barmode: "group",
+    xaxis: { title: "Tool calls" },
+    yaxis: { title: "Category", automargin: true },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 185, r: 30, t: 35, b: 60 }
+  }, { responsive: true });
+}
+
+function controlledDeltaCharts() {
+  for (const spec of reportData.controlledTurnSpecs) {
+    const labels = spec.turns.map(row => String(row.turn));
+    const traces = [{
+      type: "bar",
+      name: "Token delta",
+      x: labels,
+      y: spec.turns.map(row => row.delta),
+      marker: { color: workflowColor(spec.workflow), opacity: 0.75 },
+      hovertemplate: spec.workflow + "<br>Call %{x}<br>Token delta: %{y:,}<extra></extra>"
+    }];
+    Plotly.newPlot("controlled-delta-" + spec.rank, traces, {
       xaxis: { title: "Model call / token_count event" },
       yaxis: { title: "Token delta" },
-      yaxis2: { title: "Cumulative total tokens", overlaying: "y", side: "right", showgrid: false },
-      legend: { orientation: "h", y: 1.08 },
-      margin: { l: 70, r: 80, t: 25, b: 55 }
+      margin: { l: 70, r: 30, t: 25, b: 55 }
     }, { responsive: true });
   }
 }
 
-function makeCompositionChart() {
-  for (const spec of chartSpecs) {
-    const callLabels = spec.turns.map(row => String(row.turn));
+function controlledInputCharts() {
+  for (const spec of reportData.controlledTurnSpecs) {
+    const labels = spec.turns.map(row => String(row.turn));
     const traces = [
       {
         type: "bar",
         name: "Cached input",
-        x: callLabels,
+        x: labels,
         y: spec.turns.map(row => row.cached_input),
-        marker: { color: "#012169", opacity: 0.85 },
-        hovertemplate: spec.workflow + "<br>Call %{x}<br>Cached input: %{y:,}<extra></extra>"
+        marker: { color: "#012169", opacity: 0.85 }
       },
       {
         type: "bar",
         name: "Fresh input",
-        x: callLabels,
+        x: labels,
         y: spec.turns.map(row => row.fresh_input),
-        marker: { color: "#339898", opacity: 0.85 },
-        hovertemplate: spec.workflow + "<br>Call %{x}<br>Fresh input: %{y:,}<extra></extra>"
+        marker: { color: "#339898", opacity: 0.85 }
       }
     ];
-    Plotly.newPlot("composition-chart-" + spec.rank, traces, {
+    Plotly.newPlot("controlled-input-" + spec.rank, traces, {
       barmode: "stack",
       xaxis: { title: "Model call / token_count event" },
       yaxis: { title: "Input tokens" },
@@ -382,62 +659,60 @@ function makeCompositionChart() {
   }
 }
 
-function makeFreshChart() {
-  const traces = chartSpecs.map(spec => ({
-    type: "scatter",
-    mode: "lines+markers",
-    name: spec.workflow,
-    x: spec.turns.map(row => row.turn),
-    y: spec.turns.map(row => row.fresh_input),
-    line: { width: 3, color: workflowColor(spec.workflow) },
-    marker: { size: 7 },
-    hovertemplate: spec.workflow + "<br>Call %{x}<br>Fresh input: %{y:,}<extra></extra>"
-  }));
-  Plotly.newPlot("fresh-chart", traces, {
-    xaxis: { title: "Model call / token_count event" },
-    yaxis: { title: "Fresh/non-cached input tokens" },
-    legend: { orientation: "h", y: 1.15 },
-    margin: { l: 70, r: 30, t: 35, b: 55 }
-  }, { responsive: true });
-}
-
-function makeCostChart() {
-  const labels = costRows.map(row => row.agent === "Carson" ? "Direct .ipynb" : "Percent-cell .py");
+function cacheRatioChart() {
   const traces = [
     {
       type: "bar",
-      name: "Fresh input cost",
-      x: labels,
-      y: costRows.map(row => Number(row.non_cached_input_cost_usd)),
-      marker: { color: "#339898" }
+      name: "Observed cost ratio",
+      x: reportData.overviewRatios.map(row => row.comparison),
+      y: reportData.overviewRatios.map(row => row.observed_cost),
+      marker: { color: "#012169", opacity: 0.8 }
     },
     {
       type: "bar",
-      name: "Cached input cost",
-      x: labels,
-      y: costRows.map(row => Number(row.cached_input_cost_usd)),
-      marker: { color: "#012169" }
-    },
-    {
-      type: "bar",
-      name: "Output cost",
-      x: labels,
-      y: costRows.map(row => Number(row.output_cost_usd)),
-      marker: { color: "#c84e00" }
+      name: "Normalized cost ratio",
+      x: reportData.overviewRatios.map(row => row.comparison),
+      y: reportData.overviewRatios.map(row => row.normalized_cost),
+      marker: { color: "#339898", opacity: 0.8 }
     }
   ];
-  Plotly.newPlot("cost-chart", traces, {
-    barmode: "stack",
-    yaxis: { title: "Estimated GPT-5.5 API cost (USD)" },
-    legend: { orientation: "h", y: 1.15 },
-    margin: { l: 70, r: 30, t: 35, b: 60 }
+  Plotly.newPlot("cache-ratio-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Notebook / percent-cell cost ratio" },
+    xaxis: { title: "Comparison" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 80, r: 30, t: 35, b: 70 }
   }, { responsive: true });
 }
 
-makeFootprintChart();
-makeCompositionChart();
-makeFreshChart();
-makeCostChart();
+function setupTabs() {
+  const buttons = document.querySelectorAll(".tab-button");
+  const panels = document.querySelectorAll(".tab-panel");
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      buttons.forEach(item => item.classList.remove("active"));
+      panels.forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById(button.dataset.tab).classList.add("active");
+      setTimeout(() => {
+        document.querySelectorAll(".js-plotly-plot").forEach(plot => Plotly.Plots.resize(plot));
+      }, 0);
+    });
+  });
+}
+
+
+setupTabs();
+ratioChart();
+overviewRatioChart();
+pairRatioChart("controlled-ratio-chart", "Controlled direct-edit");
+pairRatioChart("native-ratio-chart", "Agent-native");
+toolCategoryChart("controlled-tool-category-chart", reportData.controlledToolCategories);
+toolCategoryChart("native-tool-category-chart", reportData.nativeToolCategories);
+controlledDeltaCharts();
+controlledInputCharts();
+cacheRatioChart();
+
 </script>
 </body>
 </html>

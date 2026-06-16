@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notebook vs. Percent-Cell Python for Coding Agents</title>
+  <script src="assets/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --duke-navy: #012169;
+      --duke-copper: #c84e00;
+      --duke-teal: #339898;
+      --cast-iron: #262626;
+      --hatteras: #e2e6ed;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--cast-iron);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    h1, h2, h3 {
+      color: var(--duke-navy);
+      line-height: 1.15;
+    }
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 0.6rem;
+    }
+    h2 {
+      border-top: 1px solid var(--hatteras);
+      padding-top: 1.6rem;
+      margin-top: 2.4rem;
+    }
+    .lead {
+      font-size: 1.15rem;
+      max-width: 850px;
+    }
+    .abstract {
+      margin: 1.2rem 0 1.6rem;
+      font-size: 1.04rem;
+    }
+    .callout {
+      border-left: 5px solid var(--duke-navy);
+      background: #f7f8fa;
+      padding: 1rem 1.2rem;
+      margin: 1.4rem 0;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.9rem;
+      margin: 1.4rem 0;
+    }
+    .metric {
+      border: 1px solid var(--hatteras);
+      padding: 0.9rem;
+      background: #fff;
+    }
+    .metric strong {
+      display: block;
+      font-size: 1.6rem;
+      color: var(--duke-navy);
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      border-bottom: 2px solid var(--duke-navy);
+      margin: 1.8rem 0 1.4rem;
+      padding-bottom: 0;
+    }
+    .tab-button {
+      border: 2px solid var(--duke-navy);
+      border-bottom: none;
+      background: #eef3f8;
+      color: var(--duke-navy);
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 750;
+      border-radius: 6px 6px 0 0;
+    }
+    .tab-button.active {
+      background: var(--duke-navy);
+      color: #ffffff;
+      border-color: var(--duke-navy);
+      box-shadow: 0 -2px 0 var(--duke-copper) inset;
+    }
+    .tab-button:focus-visible {
+      outline: 3px solid var(--duke-copper);
+      outline-offset: 2px;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .print-report .tab-panel {
+      display: block;
+      page-break-before: always;
+      break-before: page;
+    }
+    .print-report .tab-panel:first-of-type {
+      page-break-before: auto;
+      break-before: auto;
+    }
+    .print-report h2 {
+      border-top: none;
+      padding-top: 0;
+    }
+    @media print {
+      @page {
+        margin: 0.85in 0.55in 0.6in;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: none;
+        padding: 0;
+      }
+      .chart {
+        min-height: 410px;
+      }
+      h1, h2, h3, .chart-label {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+      .abstract, .callout, .metric-grid, table, details, .static-chart, .keep-block {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .figure-caption {
+        break-before: avoid;
+        page-break-before: avoid;
+      }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--hatteras);
+      padding: 0.5rem 0.6rem;
+      vertical-align: top;
+    }
+    th {
+      background: #f0f4f8;
+      text-align: left;
+    }
+    code {
+      background: #f0f4f8;
+      padding: 0.08rem 0.25rem;
+    }
+    pre {
+      background: #f8fafc;
+      border: 1px solid var(--hatteras);
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .chart {
+      width: 100%;
+      min-height: 460px;
+      margin: 0.3rem 0 2rem;
+    }
+    .chart-label {
+      margin: 1.2rem 0 0;
+      color: var(--duke-navy);
+      font-weight: 650;
+      font-size: 1rem;
+    }
+    .figure-caption {
+      margin: -1.35rem 0 2rem;
+      color: #444;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .keep-block {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .prompt-block {
+      margin: 1rem 0 1.5rem;
+    }
+    .prompt-block h4 {
+      color: var(--duke-navy);
+      margin: 0 0 0.4rem;
+    }
+    .small {
+      color: #555;
+      font-size: 0.95rem;
+    }
+    details {
+      border: 1px solid var(--hatteras);
+      margin: 1rem 0;
+      padding: 0.9rem 1rem;
+      background: #fff;
+    }
+    summary {
+      cursor: pointer;
+      color: var(--duke-navy);
+      font-weight: 650;
+    }
+  </style>
+</head>
+<body class="print-report">
+<main>
+  <h1>Notebook vs. Percent-Cell Python for Coding Agents</h1>
+
+
+
+  <section id="overview" class="tab-panel active">
+    <h2>Overview</h2>
+    <div class="abstract">
+      <p>Interactive data analysis is often taught and reviewed in notebooks, but coding agents have to read, edit, validate, and re-send the working artifact as context during a task. This report tests whether an <code>.ipynb</code> notebook is more token-expensive for agents than an equivalent VS Code/Jupyter percent-cell <code>.py</code> file, which preserves cell-based interaction while storing the analysis as plain Python text.</p>
+      <p>We ran two paired agent experiments in which agents analyzed Seattle Public Library checkout data to compare physical and digital borrowing trends over time and produce a short reproducible analysis report. In the controlled direct-edit comparison, one subagent edited and executed an existing notebook while a second subagent edited and executed an equivalent percent-cell Python file. In the agent-native comparison, one subagent used a less constrained notebook workflow that included generating, executing, inspecting, patching, and rerunning notebook artifacts, while the paired subagent used a percent-cell Python workflow. Across both comparisons, the notebook workflow accumulated more total tokens, required more model calls, and took longer. Internal worker names are retained as log labels for auditability, but the report treats workflow as the main unit of comparison.</p>
+    </div>
+    <div class="callout">
+      <strong>Main takeaway:</strong> both comparisons point in the same direction. Notebook workflows required more model calls, took longer, and accumulated more total task tokens. The exact cost multiplier is a best estimate because prompt caching changes the fresh/cached input split.
+    </div>
+    <div class="metric-grid">
+      <div class="metric"><strong>1.59x</strong>Agent-native total-token ratio</div>
+      <div class="metric"><strong>1.94x</strong>Controlled total-token ratio</div>
+      <div class="metric"><strong>1.25x</strong>Agent-native model-call ratio</div>
+      <div class="metric"><strong>1.71x</strong>Controlled model-call ratio</div>
+    </div>
+    <p>In both the looser agent-native workflow and the stricter direct-edit workflow, the notebook path required more model turns and accumulated more total session context. This workflow-friction result is stronger than any precise universal cost multiplier.</p>
+    <p>Total tokens are still useful because they measure cumulative context traffic. Fresh input and observed cost are useful too, but they are cache-sensitive and should be presented as estimates.</p>
+    <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Total task tokens chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Total task tokens</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">485K</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">969K</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">1.5M</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">1.9M</text>
+<text x="285.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Agent-native</text>
+<rect x="241.0" y="67.1" width="36.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="259.0" y="62.1" text-anchor="middle" font-size="11" fill="#262626">1.7M</text>
+<rect x="285.0" y="166.1" width="36.1" height="168.9" fill="#c84e00" opacity="0.85"/>
+<text x="303.0" y="161.1" text-anchor="middle" font-size="11" fill="#262626">1.1M</text>
+<text x="675.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Controlled direct-edit</text>
+<rect x="631.0" y="119.0" width="36.1" height="216.0" fill="#012169" opacity="0.85"/>
+<text x="649.0" y="114.0" text-anchor="middle" font-size="11" fill="#262626">1.4M</text>
+<rect x="675.0" y="223.6" width="36.1" height="111.4" fill="#c84e00" opacity="0.85"/>
+<text x="693.0" y="218.6" text-anchor="middle" font-size="11" fill="#262626">720K</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Notebook workflow</text>
+<rect x="280" y="12" width="14" height="14" fill="#c84e00" opacity="0.85"/>
+<text x="300" y="24" font-size="13" fill="#262626">Percent-cell workflow</text>
+</svg>
+    <p class="figure-caption"><strong>Figure:</strong> Total task tokens for notebook and percent-cell workflows within each experiment. <strong>Takeaway:</strong> the notebook workflow used more total tokens in both the agent-native and controlled comparisons.</p>
+    <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Notebook / percent-cell ratio chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Notebook / percent-cell ratio</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">0.6</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">1.3</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">1.9</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">2.6</text>
+<text x="168.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Total tokens</text>
+<rect x="124.0" y="151.8" width="36.1" height="183.2" fill="#339898" opacity="0.85"/>
+<text x="142.0" y="146.8" text-anchor="middle" font-size="11" fill="#262626">1.6</text>
+<rect x="168.0" y="110.9" width="36.1" height="224.1" fill="#012169" opacity="0.85"/>
+<text x="186.0" y="105.9" text-anchor="middle" font-size="11" fill="#262626">1.9</text>
+<text x="324.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Model calls</text>
+<rect x="280.0" y="190.6" width="36.1" height="144.4" fill="#339898" opacity="0.85"/>
+<text x="298.0" y="185.6" text-anchor="middle" font-size="11" fill="#262626">1.2</text>
+<rect x="324.0" y="136.9" width="36.1" height="198.1" fill="#012169" opacity="0.85"/>
+<text x="342.0" y="131.9" text-anchor="middle" font-size="11" fill="#262626">1.7</text>
+<text x="480.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Runtime</text>
+<rect x="436.0" y="79.4" width="36.1" height="255.6" fill="#339898" opacity="0.85"/>
+<text x="454.0" y="74.4" text-anchor="middle" font-size="11" fill="#262626">2.2</text>
+<rect x="480.0" y="67.1" width="36.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="498.0" y="62.1" text-anchor="middle" font-size="11" fill="#262626">2.3</text>
+<text x="636.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Observed cost</text>
+<rect x="592.0" y="175.2" width="36.1" height="159.8" fill="#339898" opacity="0.85"/>
+<text x="610.0" y="170.2" text-anchor="middle" font-size="11" fill="#262626">1.4</text>
+<rect x="636.0" y="100.4" width="36.1" height="234.6" fill="#012169" opacity="0.85"/>
+<text x="654.0" y="95.4" text-anchor="middle" font-size="11" fill="#262626">2.0</text>
+<text x="792.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Normalized cost</text>
+<rect x="748.0" y="190.7" width="36.1" height="144.3" fill="#339898" opacity="0.85"/>
+<text x="766.0" y="185.7" text-anchor="middle" font-size="11" fill="#262626">1.2</text>
+<rect x="792.0" y="124.2" width="36.1" height="210.8" fill="#012169" opacity="0.85"/>
+<text x="810.0" y="119.2" text-anchor="middle" font-size="11" fill="#262626">1.8</text>
+<rect x="90" y="12" width="14" height="14" fill="#339898" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Agent-native</text>
+<rect x="280" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="300" y="24" font-size="13" fill="#262626">Controlled direct-edit</text>
+</svg>
+    <p class="figure-caption"><strong>Figure:</strong> Notebook-to-percent-cell ratios for total tokens, model calls, runtime, and cost estimates. <strong>Takeaway:</strong> the notebook workflow is consistently above parity, while the exact cost ratio is more cache-sensitive than the workflow and token-count ratios.</p>
+  </section>
+
+  <section id="controlled" class="tab-panel active">
+    <h2>Controlled Direct-Edit Comparison</h2>
+    <div class="abstract">
+      <p>This section isolates the file-format question as closely as this experiment allowed. Two subagents were given the same data, the same analysis question, and similar deliverable requirements; the main intended difference was whether the durable working source was an <code>.ipynb</code> notebook or a percent-cell <code>.py</code> file.</p>
+      <p>The notebook worker edited an existing notebook, executed it, and inspected saved notebook outputs. The percent-cell worker edited an equivalent Python file and inspected terminal or saved outputs. This comparison is the strongest evidence in the report because it controls the task framing more tightly than the agent-native run.</p>
+    </div>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Total tokens</th><th>Fresh input</th><th>Model calls</th><th>Runtime</th><th>Observed cost</th><th>Source artifact tokens</th></tr></thead>
+      <tbody><tr><td>Direct .ipynb</td><td>Carson</td><td>1,395,748</td><td>129,036</td><td>24</td><td>8m 30s</td><td>$1.61</td><td>84,753</td></tr>
+<tr><td>Percent-cell .py</td><td>Confucius</td><td>719,688</td><td>51,000</td><td>14</td><td>3m 40s</td><td>$0.79</td><td>1,653</td></tr></tbody>
+    </table>
+    <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Notebook / percent-cell ratio chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Notebook / percent-cell ratio</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">0.7</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">1.4</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">2.1</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">2.8</text>
+<text x="145.7" y="385" text-anchor="middle" font-size="13" fill="#262626">Total tokens</text>
+<rect x="123.7" y="129.7" width="36.1" height="205.3" fill="#012169" opacity="0.85"/>
+<text x="141.8" y="124.7" text-anchor="middle" font-size="11" fill="#262626">1.9</text>
+<text x="257.1" y="385" text-anchor="middle" font-size="13" fill="#262626">Fresh input</text>
+<rect x="235.1" y="67.1" width="36.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="253.2" y="62.1" text-anchor="middle" font-size="11" fill="#262626">2.5</text>
+<text x="368.6" y="385" text-anchor="middle" font-size="13" fill="#262626">Output tokens</text>
+<rect x="346.6" y="162.5" width="36.1" height="172.5" fill="#012169" opacity="0.85"/>
+<text x="364.6" y="157.5" text-anchor="middle" font-size="11" fill="#262626">1.6</text>
+<text x="480.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Model calls</text>
+<rect x="458.0" y="153.5" width="36.1" height="181.5" fill="#012169" opacity="0.85"/>
+<text x="476.0" y="148.5" text-anchor="middle" font-size="11" fill="#262626">1.7</text>
+<text x="591.4" y="385" text-anchor="middle" font-size="13" fill="#262626">Runtime</text>
+<rect x="569.4" y="89.6" width="36.1" height="245.4" fill="#012169" opacity="0.85"/>
+<text x="587.5" y="84.6" text-anchor="middle" font-size="11" fill="#262626">2.3</text>
+<text x="702.9" y="385" text-anchor="middle" font-size="13" fill="#262626">Observed cost</text>
+<rect x="680.9" y="120.1" width="36.1" height="214.9" fill="#012169" opacity="0.85"/>
+<text x="698.9" y="115.1" text-anchor="middle" font-size="11" fill="#262626">2.0</text>
+<text x="814.3" y="385" text-anchor="middle" font-size="13" fill="#262626">Normalized cost</text>
+<rect x="792.3" y="141.9" width="36.1" height="193.1" fill="#012169" opacity="0.85"/>
+<text x="810.3" y="136.9" text-anchor="middle" font-size="11" fill="#262626">1.8</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Notebook / percent-cell</text>
+</svg>
+    <p class="figure-caption"><strong>Figure:</strong> Controlled direct-edit notebook-to-percent-cell ratios across task metrics. <strong>Takeaway:</strong> the notebook worker required more calls, more elapsed time, more total tokens, and more fresh input than the percent-cell worker.</p>
+    <div class="keep-block">
+      <h3>Tool-Call Categories</h3>
+      <p class="small">Categories group similar work, so source edits or output inspections do not need to use identical commands to be compared.</p>
+      <svg class="static-chart" viewBox="0 0 900 440" role="img" aria-label="Tool calls chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="220" y1="40" x2="220" y2="385" stroke="#333"/>
+<line x1="220" y1="385" x2="865" y2="385" stroke="#333"/>
+<text x="542.5" y="426" text-anchor="middle" font-size="14" fill="#262626">Tool calls</text>
+<line x1="220.0" y1="40" x2="220.0" y2="385" stroke="#e2e6ed"/>
+<text x="220.0" y="403" text-anchor="middle" font-size="12" fill="#444">0.0</text>
+<line x1="381.2" y1="40" x2="381.2" y2="385" stroke="#e2e6ed"/>
+<text x="381.2" y="403" text-anchor="middle" font-size="12" fill="#444">3.6</text>
+<line x1="542.5" y1="40" x2="542.5" y2="385" stroke="#e2e6ed"/>
+<text x="542.5" y="403" text-anchor="middle" font-size="12" fill="#444">7.2</text>
+<line x1="703.8" y1="40" x2="703.8" y2="385" stroke="#e2e6ed"/>
+<text x="703.8" y="403" text-anchor="middle" font-size="12" fill="#444">11</text>
+<line x1="865.0" y1="40" x2="865.0" y2="385" stroke="#e2e6ed"/>
+<text x="865.0" y="403" text-anchor="middle" font-size="12" fill="#444">14</text>
+<text x="210" y="68.6" text-anchor="end" font-size="12" fill="#262626">Execution</text>
+<rect x="220" y="48.7" width="179.2" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="403.2" y="59.1" font-size="11" fill="#262626">4</text>
+<rect x="220" y="64.6" width="179.2" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="403.2" y="75.0" font-size="11" fill="#262626">4</text>
+<text x="210" y="117.9" text-anchor="end" font-size="12" fill="#262626">Notebook structure validation</text>
+<rect x="220" y="98.0" width="268.8" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="492.8" y="108.4" font-size="11" fill="#262626">6</text>
+<rect x="220" y="113.9" width="0.0" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="210" y="167.2" text-anchor="end" font-size="12" fill="#262626">Output inspection</text>
+<rect x="220" y="147.3" width="537.5" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="761.5" y="157.6" font-size="11" fill="#262626">12</text>
+<rect x="220" y="163.2" width="224.0" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="448.0" y="173.5" font-size="11" fill="#262626">5</text>
+<text x="210" y="216.5" text-anchor="end" font-size="12" fill="#262626">Report/log writing</text>
+<rect x="220" y="196.6" width="44.8" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="268.8" y="206.9" font-size="11" fill="#262626">1</text>
+<rect x="220" y="212.5" width="0.0" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="210" y="265.8" text-anchor="end" font-size="12" fill="#262626">Setup, schema, or status</text>
+<rect x="220" y="245.9" width="313.5" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="537.5" y="256.2" font-size="11" fill="#262626">7</text>
+<rect x="220" y="261.8" width="224.0" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="448.0" y="272.1" font-size="11" fill="#262626">5</text>
+<text x="210" y="315.1" text-anchor="end" font-size="12" fill="#262626">Source edit</text>
+<rect x="220" y="295.2" width="268.8" height="13.0" fill="#012169" opacity="0.85"/>
+<text x="492.8" y="305.5" font-size="11" fill="#262626">6</text>
+<rect x="220" y="311.1" width="224.0" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="448.0" y="321.4" font-size="11" fill="#262626">5</text>
+<text x="210" y="364.4" text-anchor="end" font-size="12" fill="#262626">Source inspection</text>
+<rect x="220" y="344.5" width="0.0" height="13.0" fill="#012169" opacity="0.85"/>
+<rect x="220" y="360.4" width="134.4" height="13.0" fill="#c84e00" opacity="0.85"/>
+<text x="358.4" y="370.7" font-size="11" fill="#262626">3</text>
+<rect x="220" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="240" y="24" font-size="13" fill="#262626">Direct .ipynb</text>
+<rect x="495" y="12" width="14" height="14" fill="#c84e00" opacity="0.85"/>
+<text x="515" y="24" font-size="13" fill="#262626">Percent-cell .py</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Broad tool-call categories for the controlled comparison. <strong>Takeaway:</strong> the notebook workflow added notebook-specific structure validation and more output-inspection work, which helps explain the higher call count.</p>
+    </div>
+    <h3>Per-Call Token Delta</h3>
+    <div class="keep-block">
+      <p class="chart-label">Direct .ipynb workflow</p>
+      <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Token delta chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Token delta</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">19K</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">39K</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">58K</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">77K</text>
+<text x="106.2" y="385" text-anchor="middle" font-size="13" fill="#262626">1</text>
+<rect x="98.9" y="166.2" width="12.1" height="168.8" fill="#012169" opacity="0.85"/>
+<text x="104.9" y="161.2" text-anchor="middle" font-size="11" fill="#262626">44K</text>
+<text x="138.8" y="385" text-anchor="middle" font-size="13" fill="#262626">2</text>
+<rect x="131.4" y="160.1" width="12.1" height="174.9" fill="#012169" opacity="0.85"/>
+<text x="137.4" y="155.1" text-anchor="middle" font-size="11" fill="#262626">45K</text>
+<text x="171.2" y="385" text-anchor="middle" font-size="13" fill="#262626">3</text>
+<rect x="163.9" y="154.9" width="12.1" height="180.1" fill="#012169" opacity="0.85"/>
+<text x="169.9" y="149.9" text-anchor="middle" font-size="11" fill="#262626">46K</text>
+<text x="203.8" y="385" text-anchor="middle" font-size="13" fill="#262626">4</text>
+<rect x="196.4" y="149.9" width="12.1" height="185.1" fill="#012169" opacity="0.85"/>
+<text x="202.4" y="144.9" text-anchor="middle" font-size="11" fill="#262626">48K</text>
+<text x="236.2" y="385" text-anchor="middle" font-size="13" fill="#262626">5</text>
+<rect x="228.9" y="149.1" width="12.1" height="185.9" fill="#012169" opacity="0.85"/>
+<text x="234.9" y="144.1" text-anchor="middle" font-size="11" fill="#262626">48K</text>
+<text x="268.8" y="385" text-anchor="middle" font-size="13" fill="#262626">6</text>
+<rect x="261.4" y="139.6" width="12.1" height="195.4" fill="#012169" opacity="0.85"/>
+<text x="267.4" y="134.6" text-anchor="middle" font-size="11" fill="#262626">50K</text>
+<text x="301.2" y="385" text-anchor="middle" font-size="13" fill="#262626">7</text>
+<rect x="293.9" y="138.5" width="12.1" height="196.5" fill="#012169" opacity="0.85"/>
+<text x="299.9" y="133.5" text-anchor="middle" font-size="11" fill="#262626">51K</text>
+<text x="333.8" y="385" text-anchor="middle" font-size="13" fill="#262626">8</text>
+<rect x="326.4" y="136.5" width="12.1" height="198.5" fill="#012169" opacity="0.85"/>
+<text x="332.4" y="131.5" text-anchor="middle" font-size="11" fill="#262626">51K</text>
+<text x="366.2" y="385" text-anchor="middle" font-size="13" fill="#262626">9</text>
+<rect x="358.9" y="126.4" width="12.1" height="208.6" fill="#012169" opacity="0.85"/>
+<text x="364.9" y="121.4" text-anchor="middle" font-size="11" fill="#262626">54K</text>
+<text x="398.8" y="385" text-anchor="middle" font-size="13" fill="#262626">10</text>
+<rect x="391.4" y="109.1" width="12.1" height="225.9" fill="#012169" opacity="0.85"/>
+<text x="397.4" y="104.1" text-anchor="middle" font-size="11" fill="#262626">58K</text>
+<text x="431.2" y="385" text-anchor="middle" font-size="13" fill="#262626">11</text>
+<rect x="423.9" y="105.5" width="12.1" height="229.5" fill="#012169" opacity="0.85"/>
+<text x="429.9" y="100.5" text-anchor="middle" font-size="11" fill="#262626">59K</text>
+<text x="463.8" y="385" text-anchor="middle" font-size="13" fill="#262626">12</text>
+<rect x="456.4" y="104.5" width="12.1" height="230.5" fill="#012169" opacity="0.85"/>
+<text x="462.4" y="99.5" text-anchor="middle" font-size="11" fill="#262626">59K</text>
+<text x="496.2" y="385" text-anchor="middle" font-size="13" fill="#262626">13</text>
+<rect x="488.9" y="99.1" width="12.1" height="235.9" fill="#012169" opacity="0.85"/>
+<text x="494.9" y="94.1" text-anchor="middle" font-size="11" fill="#262626">61K</text>
+<text x="528.8" y="385" text-anchor="middle" font-size="13" fill="#262626">14</text>
+<rect x="521.4" y="96.7" width="12.1" height="238.3" fill="#012169" opacity="0.85"/>
+<text x="527.4" y="91.7" text-anchor="middle" font-size="11" fill="#262626">61K</text>
+<text x="561.2" y="385" text-anchor="middle" font-size="13" fill="#262626">15</text>
+<rect x="553.9" y="88.6" width="12.1" height="246.4" fill="#012169" opacity="0.85"/>
+<text x="559.9" y="83.6" text-anchor="middle" font-size="11" fill="#262626">64K</text>
+<text x="593.8" y="385" text-anchor="middle" font-size="13" fill="#262626">16</text>
+<rect x="586.4" y="87.5" width="12.1" height="247.5" fill="#012169" opacity="0.85"/>
+<text x="592.4" y="82.5" text-anchor="middle" font-size="11" fill="#262626">64K</text>
+<text x="626.2" y="385" text-anchor="middle" font-size="13" fill="#262626">17</text>
+<rect x="618.9" y="86.6" width="12.1" height="248.4" fill="#012169" opacity="0.85"/>
+<text x="624.9" y="81.6" text-anchor="middle" font-size="11" fill="#262626">64K</text>
+<text x="658.8" y="385" text-anchor="middle" font-size="13" fill="#262626">18</text>
+<rect x="651.4" y="81.7" width="12.1" height="253.3" fill="#012169" opacity="0.85"/>
+<text x="657.4" y="76.7" text-anchor="middle" font-size="11" fill="#262626">65K</text>
+<text x="691.2" y="385" text-anchor="middle" font-size="13" fill="#262626">19</text>
+<rect x="683.9" y="80.8" width="12.1" height="254.2" fill="#012169" opacity="0.85"/>
+<text x="689.9" y="75.8" text-anchor="middle" font-size="11" fill="#262626">66K</text>
+<text x="723.8" y="385" text-anchor="middle" font-size="13" fill="#262626">20</text>
+<rect x="716.4" y="79.2" width="12.1" height="255.8" fill="#012169" opacity="0.85"/>
+<text x="722.4" y="74.2" text-anchor="middle" font-size="11" fill="#262626">66K</text>
+<text x="756.2" y="385" text-anchor="middle" font-size="13" fill="#262626">21</text>
+<rect x="748.9" y="75.8" width="12.1" height="259.2" fill="#012169" opacity="0.85"/>
+<text x="754.9" y="70.8" text-anchor="middle" font-size="11" fill="#262626">67K</text>
+<text x="788.8" y="385" text-anchor="middle" font-size="13" fill="#262626">22</text>
+<rect x="781.4" y="72.9" width="12.1" height="262.1" fill="#012169" opacity="0.85"/>
+<text x="787.4" y="67.9" text-anchor="middle" font-size="11" fill="#262626">68K</text>
+<text x="821.2" y="385" text-anchor="middle" font-size="13" fill="#262626">23</text>
+<rect x="813.9" y="71.2" width="12.1" height="263.8" fill="#012169" opacity="0.85"/>
+<text x="819.9" y="66.2" text-anchor="middle" font-size="11" fill="#262626">68K</text>
+<text x="853.8" y="385" text-anchor="middle" font-size="13" fill="#262626">24</text>
+<rect x="846.4" y="67.1" width="12.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="852.4" y="62.1" text-anchor="middle" font-size="11" fill="#262626">69K</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Notebook / percent-cell</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Per-call token delta for the controlled notebook worker. <strong>Takeaway:</strong> the notebook run kept accumulating large per-call context as the task progressed.</p>
+    </div>
+    <div class="keep-block">
+      <p class="chart-label">Percent-cell .py workflow</p>
+      <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Token delta chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Token delta</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">17K</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">34K</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">52K</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">69K</text>
+<text x="117.9" y="385" text-anchor="middle" font-size="13" fill="#262626">1</text>
+<rect x="105.2" y="145.2" width="20.8" height="189.8" fill="#c84e00" opacity="0.85"/>
+<text x="115.6" y="140.2" text-anchor="middle" font-size="11" fill="#262626">44K</text>
+<text x="173.6" y="385" text-anchor="middle" font-size="13" fill="#262626">2</text>
+<rect x="160.9" y="137.9" width="20.8" height="197.1" fill="#c84e00" opacity="0.85"/>
+<text x="171.3" y="132.9" text-anchor="middle" font-size="11" fill="#262626">45K</text>
+<text x="229.3" y="385" text-anchor="middle" font-size="13" fill="#262626">3</text>
+<rect x="216.6" y="137.1" width="20.8" height="197.9" fill="#c84e00" opacity="0.85"/>
+<text x="227.0" y="132.1" text-anchor="middle" font-size="11" fill="#262626">45K</text>
+<text x="285.0" y="385" text-anchor="middle" font-size="13" fill="#262626">4</text>
+<rect x="272.3" y="131.9" width="20.8" height="203.1" fill="#c84e00" opacity="0.85"/>
+<text x="282.7" y="126.9" text-anchor="middle" font-size="11" fill="#262626">47K</text>
+<text x="340.7" y="385" text-anchor="middle" font-size="13" fill="#262626">5</text>
+<rect x="328.1" y="131.1" width="20.8" height="203.9" fill="#c84e00" opacity="0.85"/>
+<text x="338.4" y="126.1" text-anchor="middle" font-size="11" fill="#262626">47K</text>
+<text x="396.4" y="385" text-anchor="middle" font-size="13" fill="#262626">6</text>
+<rect x="383.8" y="118.9" width="20.8" height="216.1" fill="#c84e00" opacity="0.85"/>
+<text x="394.1" y="113.9" text-anchor="middle" font-size="11" fill="#262626">50K</text>
+<text x="452.1" y="385" text-anchor="middle" font-size="13" fill="#262626">7</text>
+<rect x="439.5" y="118.1" width="20.8" height="216.9" fill="#c84e00" opacity="0.85"/>
+<text x="449.9" y="113.1" text-anchor="middle" font-size="11" fill="#262626">50K</text>
+<text x="507.9" y="385" text-anchor="middle" font-size="13" fill="#262626">8</text>
+<rect x="495.2" y="107.1" width="20.8" height="227.9" fill="#c84e00" opacity="0.85"/>
+<text x="505.6" y="102.1" text-anchor="middle" font-size="11" fill="#262626">52K</text>
+<text x="563.6" y="385" text-anchor="middle" font-size="13" fill="#262626">9</text>
+<rect x="550.9" y="106.3" width="20.8" height="228.7" fill="#c84e00" opacity="0.85"/>
+<text x="561.3" y="101.3" text-anchor="middle" font-size="11" fill="#262626">52K</text>
+<text x="619.3" y="385" text-anchor="middle" font-size="13" fill="#262626">10</text>
+<rect x="606.6" y="97.3" width="20.8" height="237.7" fill="#c84e00" opacity="0.85"/>
+<text x="617.0" y="92.3" text-anchor="middle" font-size="11" fill="#262626">55K</text>
+<text x="675.0" y="385" text-anchor="middle" font-size="13" fill="#262626">11</text>
+<rect x="662.3" y="93.3" width="20.8" height="241.7" fill="#c84e00" opacity="0.85"/>
+<text x="672.7" y="88.3" text-anchor="middle" font-size="11" fill="#262626">55K</text>
+<text x="730.7" y="385" text-anchor="middle" font-size="13" fill="#262626">12</text>
+<rect x="718.1" y="81.6" width="20.8" height="253.4" fill="#c84e00" opacity="0.85"/>
+<text x="728.4" y="76.6" text-anchor="middle" font-size="11" fill="#262626">58K</text>
+<text x="786.4" y="385" text-anchor="middle" font-size="13" fill="#262626">13</text>
+<rect x="773.8" y="79.4" width="20.8" height="255.6" fill="#c84e00" opacity="0.85"/>
+<text x="784.1" y="74.4" text-anchor="middle" font-size="11" fill="#262626">59K</text>
+<text x="842.1" y="385" text-anchor="middle" font-size="13" fill="#262626">14</text>
+<rect x="829.5" y="67.1" width="20.8" height="267.9" fill="#c84e00" opacity="0.85"/>
+<text x="839.9" y="62.1" text-anchor="middle" font-size="11" fill="#262626">61K</text>
+<rect x="90" y="12" width="14" height="14" fill="#c84e00" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Notebook / percent-cell</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Per-call token delta for the controlled percent-cell worker. <strong>Takeaway:</strong> the percent-cell run had fewer calls overall, shortening the cumulative token path through the task.</p>
+    </div>
+    <h3>Input Composition</h3>
+    <div class="keep-block">
+      <p class="chart-label">Direct .ipynb workflow</p>
+      <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Input tokens chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="355" x2="875" y2="355" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="355" stroke="#333"/>
+<text x="18" y="195.0" transform="rotate(-90 18 195.0)" font-size="14" fill="#262626">Input tokens</text>
+<line x1="85" y1="355.0" x2="875" y2="355.0" stroke="#e2e6ed"/>
+<text x="80" y="359.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="275.0" x2="875" y2="275.0" stroke="#e2e6ed"/>
+<text x="80" y="279.0" text-anchor="end" font-size="12" fill="#444">19K</text>
+<line x1="85" y1="195.0" x2="875" y2="195.0" stroke="#e2e6ed"/>
+<text x="80" y="199.0" text-anchor="end" font-size="12" fill="#444">38K</text>
+<line x1="85" y1="115.0" x2="875" y2="115.0" stroke="#e2e6ed"/>
+<text x="80" y="119.0" text-anchor="end" font-size="12" fill="#444">58K</text>
+<line x1="85" y1="35.0" x2="875" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">77K</text>
+<rect x="95.2" y="175.1" width="22.2" height="20.8" fill="#012169" opacity="0.85"/>
+<rect x="95.2" y="195.9" width="22.2" height="159.1" fill="#339898" opacity="0.85"/>
+<text x="106.4" y="388" text-anchor="middle" font-size="11" fill="#262626">1</text>
+<rect x="127.9" y="168.9" width="22.2" height="20.8" fill="#012169" opacity="0.85"/>
+<rect x="127.9" y="189.7" width="22.2" height="165.3" fill="#339898" opacity="0.85"/>
+<rect x="160.7" y="166.1" width="22.2" height="178.4" fill="#012169" opacity="0.85"/>
+<rect x="160.7" y="344.5" width="22.2" height="10.5" fill="#339898" opacity="0.85"/>
+<text x="171.8" y="388" text-anchor="middle" font-size="11" fill="#262626">3</text>
+<rect x="193.4" y="159.5" width="22.2" height="186.9" fill="#012169" opacity="0.85"/>
+<rect x="193.4" y="346.4" width="22.2" height="8.6" fill="#339898" opacity="0.85"/>
+<rect x="226.1" y="156.2" width="22.2" height="195.4" fill="#012169" opacity="0.85"/>
+<rect x="226.1" y="351.7" width="22.2" height="3.3" fill="#339898" opacity="0.85"/>
+<text x="237.2" y="388" text-anchor="middle" font-size="11" fill="#262626">5</text>
+<rect x="258.8" y="155.1" width="22.2" height="184.8" fill="#012169" opacity="0.85"/>
+<rect x="258.8" y="339.9" width="22.2" height="15.1" fill="#339898" opacity="0.85"/>
+<rect x="291.5" y="145.2" width="22.2" height="199.7" fill="#012169" opacity="0.85"/>
+<rect x="291.5" y="344.9" width="22.2" height="10.1" fill="#339898" opacity="0.85"/>
+<text x="302.6" y="388" text-anchor="middle" font-size="11" fill="#262626">7</text>
+<rect x="324.2" y="142.5" width="22.2" height="197.6" fill="#012169" opacity="0.85"/>
+<rect x="324.2" y="340.1" width="22.2" height="14.9" fill="#339898" opacity="0.85"/>
+<rect x="356.9" y="131.9" width="22.2" height="212.5" fill="#012169" opacity="0.85"/>
+<rect x="356.9" y="344.4" width="22.2" height="10.6" fill="#339898" opacity="0.85"/>
+<text x="368.0" y="388" text-anchor="middle" font-size="11" fill="#262626">9</text>
+<rect x="389.6" y="113.4" width="22.2" height="221.0" fill="#012169" opacity="0.85"/>
+<rect x="389.6" y="334.4" width="22.2" height="20.6" fill="#339898" opacity="0.85"/>
+<rect x="422.3" y="112.4" width="22.2" height="208.2" fill="#012169" opacity="0.85"/>
+<rect x="422.3" y="320.7" width="22.2" height="34.3" fill="#339898" opacity="0.85"/>
+<text x="433.4" y="388" text-anchor="middle" font-size="11" fill="#262626">11</text>
+<rect x="455.0" y="108.6" width="22.2" height="240.2" fill="#012169" opacity="0.85"/>
+<rect x="455.0" y="348.8" width="22.2" height="6.2" fill="#339898" opacity="0.85"/>
+<rect x="487.7" y="102.7" width="22.2" height="244.4" fill="#012169" opacity="0.85"/>
+<rect x="487.7" y="347.1" width="22.2" height="7.9" fill="#339898" opacity="0.85"/>
+<text x="498.9" y="388" text-anchor="middle" font-size="11" fill="#262626">13</text>
+<rect x="520.4" y="101.3" width="22.2" height="242.3" fill="#012169" opacity="0.85"/>
+<rect x="520.4" y="343.6" width="22.2" height="11.4" fill="#339898" opacity="0.85"/>
+<rect x="553.2" y="91.2" width="22.2" height="250.8" fill="#012169" opacity="0.85"/>
+<rect x="553.2" y="342.0" width="22.2" height="13.0" fill="#339898" opacity="0.85"/>
+<text x="564.3" y="388" text-anchor="middle" font-size="11" fill="#262626">15</text>
+<rect x="585.9" y="90.3" width="22.2" height="253.0" fill="#012169" opacity="0.85"/>
+<rect x="585.9" y="343.3" width="22.2" height="11.7" fill="#339898" opacity="0.85"/>
+<rect x="618.6" y="89.1" width="22.2" height="263.6" fill="#012169" opacity="0.85"/>
+<rect x="618.6" y="352.7" width="22.2" height="2.3" fill="#339898" opacity="0.85"/>
+<text x="629.7" y="388" text-anchor="middle" font-size="11" fill="#262626">17</text>
+<rect x="651.3" y="87.0" width="22.2" height="265.7" fill="#012169" opacity="0.85"/>
+<rect x="651.3" y="352.8" width="22.2" height="2.2" fill="#339898" opacity="0.85"/>
+<rect x="684.0" y="83.0" width="22.2" height="263.6" fill="#012169" opacity="0.85"/>
+<rect x="684.0" y="346.7" width="22.2" height="8.3" fill="#339898" opacity="0.85"/>
+<text x="695.1" y="388" text-anchor="middle" font-size="11" fill="#262626">19</text>
+<rect x="716.7" y="81.7" width="22.2" height="270.0" fill="#012169" opacity="0.85"/>
+<rect x="716.7" y="351.7" width="22.2" height="3.3" fill="#339898" opacity="0.85"/>
+<rect x="749.4" y="79.1" width="22.2" height="272.1" fill="#012169" opacity="0.85"/>
+<rect x="749.4" y="351.2" width="22.2" height="3.8" fill="#339898" opacity="0.85"/>
+<text x="760.5" y="388" text-anchor="middle" font-size="11" fill="#262626">21</text>
+<rect x="782.1" y="76.7" width="22.2" height="274.3" fill="#012169" opacity="0.85"/>
+<rect x="782.1" y="351.0" width="22.2" height="4.0" fill="#339898" opacity="0.85"/>
+<rect x="814.8" y="73.6" width="22.2" height="276.4" fill="#012169" opacity="0.85"/>
+<rect x="814.8" y="350.0" width="22.2" height="5.0" fill="#339898" opacity="0.85"/>
+<text x="825.9" y="388" text-anchor="middle" font-size="11" fill="#262626">23</text>
+<rect x="847.5" y="69.3" width="22.2" height="280.6" fill="#012169" opacity="0.85"/>
+<rect x="847.5" y="349.9" width="22.2" height="5.1" fill="#339898" opacity="0.85"/>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/><text x="110" y="24" font-size="13" fill="#262626">Cached input</text>
+<rect x="225" y="12" width="14" height="14" fill="#339898" opacity="0.85"/><text x="245" y="24" font-size="13" fill="#262626">Fresh input</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Cached and fresh input tokens by model call for the controlled notebook worker. <strong>Takeaway:</strong> most later input was cached, but the notebook run still paid for repeated long context and several fresh-input spikes.</p>
+    </div>
+    <div class="keep-block">
+      <p class="chart-label">Percent-cell .py workflow</p>
+      <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Input tokens chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="355" x2="875" y2="355" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="355" stroke="#333"/>
+<text x="18" y="195.0" transform="rotate(-90 18 195.0)" font-size="14" fill="#262626">Input tokens</text>
+<line x1="85" y1="355.0" x2="875" y2="355.0" stroke="#e2e6ed"/>
+<text x="80" y="359.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="275.0" x2="875" y2="275.0" stroke="#e2e6ed"/>
+<text x="80" y="279.0" text-anchor="end" font-size="12" fill="#444">17K</text>
+<line x1="85" y1="195.0" x2="875" y2="195.0" stroke="#e2e6ed"/>
+<text x="80" y="199.0" text-anchor="end" font-size="12" fill="#444">34K</text>
+<line x1="85" y1="115.0" x2="875" y2="115.0" stroke="#e2e6ed"/>
+<text x="80" y="119.0" text-anchor="end" font-size="12" fill="#444">51K</text>
+<line x1="85" y1="35.0" x2="875" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">68K</text>
+<rect x="104.0" y="151.3" width="28.0" height="195.0" fill="#012169" opacity="0.85"/>
+<rect x="104.0" y="346.3" width="28.0" height="8.7" fill="#339898" opacity="0.85"/>
+<text x="118.0" y="388" text-anchor="middle" font-size="11" fill="#262626">1</text>
+<rect x="160.1" y="144.2" width="28.0" height="195.0" fill="#012169" opacity="0.85"/>
+<rect x="160.1" y="339.1" width="28.0" height="15.9" fill="#339898" opacity="0.85"/>
+<text x="174.1" y="388" text-anchor="middle" font-size="11" fill="#262626">2</text>
+<rect x="216.2" y="141.5" width="28.0" height="209.4" fill="#012169" opacity="0.85"/>
+<rect x="216.2" y="350.9" width="28.0" height="4.1" fill="#339898" opacity="0.85"/>
+<text x="230.2" y="388" text-anchor="middle" font-size="11" fill="#262626">3</text>
+<rect x="272.2" y="139.2" width="28.0" height="211.9" fill="#012169" opacity="0.85"/>
+<rect x="272.2" y="351.0" width="28.0" height="4.0" fill="#339898" opacity="0.85"/>
+<text x="286.2" y="388" text-anchor="middle" font-size="11" fill="#262626">4</text>
+<rect x="328.3" y="135.0" width="28.0" height="214.3" fill="#012169" opacity="0.85"/>
+<rect x="328.3" y="349.2" width="28.0" height="5.8" fill="#339898" opacity="0.85"/>
+<text x="342.3" y="388" text-anchor="middle" font-size="11" fill="#262626">5</text>
+<rect x="384.4" y="127.6" width="28.0" height="219.1" fill="#012169" opacity="0.85"/>
+<rect x="384.4" y="346.7" width="28.0" height="8.3" fill="#339898" opacity="0.85"/>
+<text x="398.4" y="388" text-anchor="middle" font-size="11" fill="#262626">6</text>
+<rect x="440.5" y="120.9" width="28.0" height="226.3" fill="#012169" opacity="0.85"/>
+<rect x="440.5" y="347.3" width="28.0" height="7.7" fill="#339898" opacity="0.85"/>
+<text x="454.5" y="388" text-anchor="middle" font-size="11" fill="#262626">7</text>
+<rect x="496.5" y="111.8" width="28.0" height="202.2" fill="#012169" opacity="0.85"/>
+<rect x="496.5" y="314.0" width="28.0" height="41.0" fill="#339898" opacity="0.85"/>
+<text x="510.5" y="388" text-anchor="middle" font-size="11" fill="#262626">8</text>
+<rect x="552.6" y="108.2" width="28.0" height="233.6" fill="#012169" opacity="0.85"/>
+<rect x="552.6" y="341.8" width="28.0" height="13.2" fill="#339898" opacity="0.85"/>
+<text x="566.6" y="388" text-anchor="middle" font-size="11" fill="#262626">9</text>
+<rect x="608.7" y="99.7" width="28.0" height="240.8" fill="#012169" opacity="0.85"/>
+<rect x="608.7" y="340.6" width="28.0" height="14.4" fill="#339898" opacity="0.85"/>
+<text x="622.7" y="388" text-anchor="middle" font-size="11" fill="#262626">10</text>
+<rect x="664.8" y="93.9" width="28.0" height="252.9" fill="#012169" opacity="0.85"/>
+<rect x="664.8" y="346.8" width="28.0" height="8.2" fill="#339898" opacity="0.85"/>
+<text x="678.8" y="388" text-anchor="middle" font-size="11" fill="#262626">11</text>
+<rect x="720.8" y="85.8" width="28.0" height="180.5" fill="#012169" opacity="0.85"/>
+<rect x="720.8" y="266.3" width="28.0" height="88.7" fill="#339898" opacity="0.85"/>
+<text x="734.8" y="388" text-anchor="middle" font-size="11" fill="#262626">12</text>
+<rect x="776.9" y="80.6" width="28.0" height="267.4" fill="#012169" opacity="0.85"/>
+<rect x="776.9" y="348.0" width="28.0" height="7.0" fill="#339898" opacity="0.85"/>
+<text x="790.9" y="388" text-anchor="middle" font-size="11" fill="#262626">13</text>
+<rect x="833.0" y="69.3" width="28.0" height="272.2" fill="#012169" opacity="0.85"/>
+<rect x="833.0" y="341.5" width="28.0" height="13.5" fill="#339898" opacity="0.85"/>
+<text x="847.0" y="388" text-anchor="middle" font-size="11" fill="#262626">14</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/><text x="110" y="24" font-size="13" fill="#262626">Cached input</text>
+<rect x="225" y="12" width="14" height="14" fill="#339898" opacity="0.85"/><text x="245" y="24" font-size="13" fill="#262626">Fresh input</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Cached and fresh input tokens by model call for the controlled percent-cell worker. <strong>Takeaway:</strong> the percent-cell workflow had fewer model calls and less cumulative fresh input.</p>
+    </div>
+    <h3>Tool-Call Category Table</h3>
+    <table>
+      <thead><tr><th>Workflow</th><th>Category</th><th>Tool calls</th></tr></thead>
+      <tbody><tr><td>direct ipynb</td><td>direct notebook edit</td><td>6</td></tr>
+<tr><td>direct ipynb</td><td>environment check</td><td>1</td></tr>
+<tr><td>direct ipynb</td><td>filesystem/navigation</td><td>4</td></tr>
+<tr><td>direct ipynb</td><td>final status check</td><td>1</td></tr>
+<tr><td>direct ipynb</td><td>notebook execution</td><td>4</td></tr>
+<tr><td>direct ipynb</td><td>notebook output extraction</td><td>11</td></tr>
+<tr><td>direct ipynb</td><td>notebook report/log write</td><td>1</td></tr>
+<tr><td>direct ipynb</td><td>notebook structure validation</td><td>6</td></tr>
+<tr><td>direct ipynb</td><td>output artifact inspection</td><td>1</td></tr>
+<tr><td>direct ipynb</td><td>schema reference</td><td>1</td></tr>
+<tr><td>percent-cell py</td><td>environment check</td><td>1</td></tr>
+<tr><td>percent-cell py</td><td>filesystem/navigation</td><td>2</td></tr>
+<tr><td>percent-cell py</td><td>final status check</td><td>1</td></tr>
+<tr><td>percent-cell py</td><td>output artifact inspection</td><td>5</td></tr>
+<tr><td>percent-cell py</td><td>percent-cell execution</td><td>4</td></tr>
+<tr><td>percent-cell py</td><td>percent-cell source edit</td><td>5</td></tr>
+<tr><td>percent-cell py</td><td>percent-cell source inspection</td><td>3</td></tr>
+<tr><td>percent-cell py</td><td>schema reference</td><td>1</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="native" class="tab-panel active">
+    <h2>Agent-Native Comparison</h2>
+    <div class="abstract">
+      <p>This section uses the earlier, less constrained paired run to ask what happens when the notebook worker is allowed to follow a more natural agent workflow. That notebook workflow included generating notebook structure, executing with notebook tooling, inspecting saved outputs, patching, and rerunning notebook artifacts.</p>
+      <p>Because the workers had more freedom, this run is less controlled than the direct-edit comparison. Its value is corroboration: it tests whether the same direction appears when the notebook worker behaves more like an unconstrained coding agent might behave in practice.</p>
+    </div>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Total tokens</th><th>Fresh input</th><th>Model calls</th><th>Runtime</th><th>Observed cost</th><th>Source artifact tokens</th></tr></thead>
+      <tbody><tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>1,730,973</td><td>122,627</td><td>25</td><td>10m 29s</td><td>$1.68</td><td>81,758</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>1,091,505</td><td>83,054</td><td>20</td><td>4m 44s</td><td>$1.22</td><td>1,734</td></tr></tbody>
+    </table>
+    <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Notebook / percent-cell ratio chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Notebook / percent-cell ratio</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">0.6</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">1.2</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">1.9</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">2.5</text>
+<text x="145.7" y="385" text-anchor="middle" font-size="13" fill="#262626">Total tokens</text>
+<rect x="123.7" y="143.0" width="36.1" height="192.0" fill="#012169" opacity="0.85"/>
+<text x="141.8" y="138.0" text-anchor="middle" font-size="11" fill="#262626">1.6</text>
+<text x="257.1" y="385" text-anchor="middle" font-size="13" fill="#262626">Fresh input</text>
+<rect x="235.1" y="156.2" width="36.1" height="178.8" fill="#012169" opacity="0.85"/>
+<text x="253.2" y="151.2" text-anchor="middle" font-size="11" fill="#262626">1.5</text>
+<text x="368.6" y="385" text-anchor="middle" font-size="13" fill="#262626">Output tokens</text>
+<rect x="346.6" y="226.8" width="36.1" height="108.2" fill="#012169" opacity="0.85"/>
+<text x="364.6" y="221.8" text-anchor="middle" font-size="11" fill="#262626">0.9</text>
+<text x="480.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Model calls</text>
+<rect x="458.0" y="183.7" width="36.1" height="151.3" fill="#012169" opacity="0.85"/>
+<text x="476.0" y="178.7" text-anchor="middle" font-size="11" fill="#262626">1.2</text>
+<text x="591.4" y="385" text-anchor="middle" font-size="13" fill="#262626">Runtime</text>
+<rect x="569.4" y="67.1" width="36.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="587.5" y="62.1" text-anchor="middle" font-size="11" fill="#262626">2.2</text>
+<text x="702.9" y="385" text-anchor="middle" font-size="13" fill="#262626">Observed cost</text>
+<rect x="680.9" y="167.5" width="36.1" height="167.5" fill="#012169" opacity="0.85"/>
+<text x="698.9" y="162.5" text-anchor="middle" font-size="11" fill="#262626">1.4</text>
+<text x="814.3" y="385" text-anchor="middle" font-size="13" fill="#262626">Normalized cost</text>
+<rect x="792.3" y="183.8" width="36.1" height="151.2" fill="#012169" opacity="0.85"/>
+<text x="810.3" y="178.8" text-anchor="middle" font-size="11" fill="#262626">1.2</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Notebook / percent-cell</text>
+</svg>
+    <p class="figure-caption"><strong>Figure:</strong> Agent-native notebook-to-percent-cell ratios across task metrics. <strong>Takeaway:</strong> even in the less constrained run, the notebook workflow used more total tokens, more model calls, more time, and higher estimated cost.</p>
+    <div class="keep-block">
+      <h3>Tool-Call Categories</h3>
+      <p class="small">The agent-native logs mostly expose shell and patch tools, so this chart uses broad command-intent categories.</p>
+      <svg class="static-chart" viewBox="0 0 900 440" role="img" aria-label="Tool calls chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="220" y1="40" x2="220" y2="385" stroke="#333"/>
+<line x1="220" y1="385" x2="865" y2="385" stroke="#333"/>
+<text x="542.5" y="426" text-anchor="middle" font-size="14" fill="#262626">Tool calls</text>
+<line x1="220.0" y1="40" x2="220.0" y2="385" stroke="#e2e6ed"/>
+<text x="220.0" y="403" text-anchor="middle" font-size="12" fill="#444">0.0</text>
+<line x1="381.2" y1="40" x2="381.2" y2="385" stroke="#e2e6ed"/>
+<text x="381.2" y="403" text-anchor="middle" font-size="12" fill="#444">4.5</text>
+<line x1="542.5" y1="40" x2="542.5" y2="385" stroke="#e2e6ed"/>
+<text x="542.5" y="403" text-anchor="middle" font-size="12" fill="#444">9.0</text>
+<line x1="703.8" y1="40" x2="703.8" y2="385" stroke="#e2e6ed"/>
+<text x="703.8" y="403" text-anchor="middle" font-size="12" fill="#444">14</text>
+<line x1="865.0" y1="40" x2="865.0" y2="385" stroke="#e2e6ed"/>
+<text x="865.0" y="403" text-anchor="middle" font-size="12" fill="#444">18</text>
+<text x="210" y="72.8" text-anchor="end" font-size="12" fill="#262626">Execution</text>
+<rect x="220" y="50.2" width="358.3" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="582.3" y="62.3" font-size="11" fill="#262626">10</text>
+<rect x="220" y="68.8" width="394.2" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="618.2" y="80.8" font-size="11" fill="#262626">11</text>
+<text x="210" y="130.2" text-anchor="end" font-size="12" fill="#262626">Output inspection</text>
+<rect x="220" y="107.7" width="107.5" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="331.5" y="119.8" font-size="11" fill="#262626">3</text>
+<rect x="220" y="126.2" width="71.7" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="295.7" y="138.3" font-size="11" fill="#262626">2</text>
+<text x="210" y="187.8" text-anchor="end" font-size="12" fill="#262626">Report/log writing</text>
+<rect x="220" y="165.2" width="71.7" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="295.7" y="177.3" font-size="11" fill="#262626">2</text>
+<rect x="220" y="183.8" width="71.7" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="295.7" y="195.8" font-size="11" fill="#262626">2</text>
+<text x="210" y="245.2" text-anchor="end" font-size="12" fill="#262626">Setup, schema, or status</text>
+<rect x="220" y="222.7" width="537.5" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="761.5" y="234.8" font-size="11" fill="#262626">15</text>
+<rect x="220" y="241.2" width="430.0" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="654.0" y="253.3" font-size="11" fill="#262626">12</text>
+<text x="210" y="302.8" text-anchor="end" font-size="12" fill="#262626">Source edit</text>
+<rect x="220" y="280.2" width="107.5" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="331.5" y="292.3" font-size="11" fill="#262626">3</text>
+<rect x="220" y="298.8" width="179.2" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="403.2" y="310.8" font-size="11" fill="#262626">5</text>
+<text x="210" y="360.2" text-anchor="end" font-size="12" fill="#262626">Source inspection</text>
+<rect x="220" y="337.7" width="107.5" height="15.2" fill="#012169" opacity="0.85"/>
+<text x="331.5" y="349.8" font-size="11" fill="#262626">3</text>
+<rect x="220" y="356.2" width="71.7" height="15.2" fill="#c84e00" opacity="0.85"/>
+<text x="295.7" y="368.3" font-size="11" fill="#262626">2</text>
+<rect x="220" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="240" y="24" font-size="13" fill="#262626">Agent-native executed .ipynb</text>
+<rect x="495" y="12" width="14" height="14" fill="#c84e00" opacity="0.85"/>
+<text x="515" y="24" font-size="13" fill="#262626">Agent-native percent-cell .py</text>
+</svg>
+      <p class="figure-caption"><strong>Figure:</strong> Broad command-intent categories for the agent-native comparison. <strong>Takeaway:</strong> the agent-native notebook run spent more calls on setup/status and output or execution handling, while broad edit and report-writing work was similar in scale.</p>
+    </div>
+    <h3>Raw Tool Calls</h3>
+    <table>
+      <thead><tr><th>Workflow</th><th>Log label</th><th>Tool</th><th>Calls</th></tr></thead>
+      <tbody><tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>apply_patch</td><td>5</td></tr>
+<tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>exec_command</td><td>30</td></tr>
+<tr><td>Agent-native executed .ipynb</td><td>Boyle</td><td>write_stdin</td><td>1</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>apply_patch</td><td>7</td></tr>
+<tr><td>Agent-native percent-cell .py</td><td>Laplace</td><td>exec_command</td><td>27</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="cache" class="tab-panel active">
+    <h2>Cache And Cost Notes</h2>
+    <div class="abstract">
+      <p>This section separates total session traffic from cache-sensitive cost estimates. The raw token totals show how much input and output accumulated across model calls. API-equivalent cost depends on how much input was classified as fresh versus cached, which varied across first calls in a way that should not be over-interpreted as a file-format effect.</p>
+      <p>The normalization table treats the notebook first calls as if they had the same common first-call cache pattern seen in the percent-cell runs. This sensitivity check helps show whether the conclusion depends entirely on the first-call cache difference.</p>
+    </div>
+    <p>Prompt caching changes the split between fresh and cached input. It does not change total input tokens, but it does affect estimated API cost. In these runs, the percent-cell first calls commonly had about 43K input tokens with about 41K cached, while the notebook first calls had similar input length but only about 5K cached.</p>
+    <p>The table below normalizes each notebook first call to the common 41,344 cached-token first-call pattern as a sensitivity check rather than a claim about what billing should have been.</p>
+    <table>
+      <thead><tr><th>Comparison</th><th>Pair</th><th>Observed cost ratio</th><th>Normalized fresh-input ratio</th><th>Normalized cost ratio</th></tr></thead>
+      <tbody><tr><td>Agent-native</td><td>Agent-native executed .ipynb / Agent-native percent-cell .py</td><td>1.38x</td><td>1.04x</td><td>1.25x</td></tr>
+<tr><td>Controlled direct-edit</td><td>Direct .ipynb / Percent-cell .py</td><td>2.03x</td><td>1.82x</td><td>1.82x</td></tr></tbody>
+    </table>
+    <svg class="static-chart" viewBox="0 0 900 430" role="img" aria-label="Notebook / percent-cell cost ratio chart">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="90" y1="335" x2="870" y2="335" stroke="#333"/>
+<line x1="90" y1="35" x2="90" y2="335" stroke="#333"/>
+<text x="18" y="185.0" transform="rotate(-90 18 185.0)" font-size="14" fill="#262626">Notebook / percent-cell cost ratio</text>
+<line x1="85" y1="335.0" x2="870" y2="335.0" stroke="#e2e6ed"/>
+<text x="80" y="339.0" text-anchor="end" font-size="12" fill="#444">0.0</text>
+<line x1="85" y1="260.0" x2="870" y2="260.0" stroke="#e2e6ed"/>
+<text x="80" y="264.0" text-anchor="end" font-size="12" fill="#444">0.6</text>
+<line x1="85" y1="185.0" x2="870" y2="185.0" stroke="#e2e6ed"/>
+<text x="80" y="189.0" text-anchor="end" font-size="12" fill="#444">1.1</text>
+<line x1="85" y1="110.0" x2="870" y2="110.0" stroke="#e2e6ed"/>
+<text x="80" y="114.0" text-anchor="end" font-size="12" fill="#444">1.7</text>
+<line x1="85" y1="35.0" x2="870" y2="35.0" stroke="#e2e6ed"/>
+<text x="80" y="39.0" text-anchor="end" font-size="12" fill="#444">2.3</text>
+<text x="285.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Agent-native</text>
+<rect x="241.0" y="152.5" width="36.1" height="182.5" fill="#012169" opacity="0.85"/>
+<text x="259.0" y="147.5" text-anchor="middle" font-size="11" fill="#262626">1.4</text>
+<rect x="285.0" y="170.2" width="36.1" height="164.8" fill="#339898" opacity="0.85"/>
+<text x="303.0" y="165.2" text-anchor="middle" font-size="11" fill="#262626">1.2</text>
+<text x="675.0" y="385" text-anchor="middle" font-size="13" fill="#262626">Controlled direct-edit</text>
+<rect x="631.0" y="67.1" width="36.1" height="267.9" fill="#012169" opacity="0.85"/>
+<text x="649.0" y="62.1" text-anchor="middle" font-size="11" fill="#262626">2.0</text>
+<rect x="675.0" y="94.3" width="36.1" height="240.7" fill="#339898" opacity="0.85"/>
+<text x="693.0" y="89.3" text-anchor="middle" font-size="11" fill="#262626">1.8</text>
+<rect x="90" y="12" width="14" height="14" fill="#012169" opacity="0.85"/>
+<text x="110" y="24" font-size="13" fill="#262626">Observed cost ratio</text>
+<rect x="280" y="12" width="14" height="14" fill="#339898" opacity="0.85"/>
+<text x="300" y="24" font-size="13" fill="#262626">Normalized cost ratio</text>
+</svg>
+    <p class="figure-caption"><strong>Figure:</strong> Observed cost ratios compared with ratios after normalizing notebook first-call cache behavior. <strong>Takeaway:</strong> notebook workflows remain more expensive under this sensitivity check, but the multiplier shrinks when the first-call cache imbalance is reduced.</p>
+    <p class="small">Interpretation: cost likely moves in the same direction as total tokens and model calls, but the exact cost ratio is less stable than the workflow-turn evidence.</p>
+  </section>
+
+  <section id="appendix" class="tab-panel active">
+    <h2>Appendix</h2>
+    <div class="abstract">
+      <p>This section documents how the report can be audited and rebuilt. The HTML is generated from package-local CSV files and raw Codex JSONL logs; the exact worker prompts are included so readers can inspect the starting conditions for each subagent.</p>
+    </div>
+    <h3>Reproducibility</h3>
+    <p>The page is generated by <code>scripts/build_report.py</code> from CSV files and raw JSONL logs included in this package. Plotly is vendored at <code>assets/plotly-2.35.2.min.js</code>.</p>
+    <h3>Token Interpretation</h3>
+    <p><code>total_tokens</code> is cumulative accounting across model calls, not unique text. For each call, <code>input_tokens = cached_input_tokens + non_cached_input_tokens</code>, and <code>total_tokens = input_tokens + output_tokens</code>.</p>
+    <h3>Exact Starting Prompts</h3>
+    <p>The names below are internal worker/log labels preserved so the raw JSONL logs, CSV rows, and prompts can be cross-checked.</p>
+    <section class="prompt-block"><h4>Boyle: agent-native notebook prompt</h4><pre>You are Worker A in a controlled format-efficiency experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope, and adjust only within your own directory.
+
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/notebook-agent/
+
+Task: Create a small but realistic analysis session as a Jupyter notebook. The goal is to simulate working with a human analyst who wants to see intermediate notebook cell outputs while the analysis evolves.
+
+Use this dataset reference first: seattle-public-library/README.md. For the actual analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Deliverables in your assigned directory:
+1. analysis-notebook.ipynb with 5-8 clear cells, including markdown explanation, intermediate displayed outputs, and at least one plot output. Execute the notebook so outputs are saved.
+2. reports/analysis-report.md: concise markdown report with procedure, checks, findings, conclusion, and references to saved assets.
+3. reports/assets/: save at least one chart as SVG or PNG and one CSV summary table.
+4. run-log.md: brief note describing how you executed cells and any issues.
+
+Style constraints:
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Do not do unrelated exploration.
+- Use .venv/bin/python or tools inside .venv only.
+
+Final response: list changed files, execution command(s), and a short summary of findings.</pre></section>
+    <section class="prompt-block"><h4>Laplace: agent-native percent-cell prompt</h4><pre>You are Worker B in a controlled format-efficiency experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope, and adjust only within your own directory.
+
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/py-cell-agent/
+
+Task: Create a small but realistic analysis session as a VS Code percent-cell Python file. The goal is to simulate working with a human analyst who wants to run intermediate cells and see outputs while the analysis evolves, but without storing notebook JSON output blobs in the source file.
+
+Use this dataset reference first: seattle-public-library/README.md. For the actual analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Deliverables in your assigned directory:
+1. analysis-cells.py using VS Code/Jupyter percent-cell format with 5-8 clear cells, including markdown cells and intermediate print/display statements suitable for a human to run cell-by-cell in VS Code.
+2. reports/analysis-report.md: concise markdown report with procedure, checks, findings, conclusion, and references to saved assets.
+3. reports/assets/: save at least one chart as SVG or PNG and one CSV summary table.
+4. run-log.md: brief note describing how you executed the cells/script and any issues. Since .py cell outputs are not saved in the source file, include a compact transcript of important intermediate outputs in the run log or report.
+
+Style constraints:
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Do not do unrelated exploration.
+- Use .venv/bin/python only.
+
+Final response: list changed files, execution command(s), and a short summary of findings.</pre></section>
+    <section class="prompt-block"><h4>Carson: direct notebook prompt</h4><pre>You are Worker C in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
+
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/direct-notebook-agent/
+Starter artifact: agent-format-experiment/direct-notebook-agent/analysis-notebook.ipynb
+
+Task: Simulate a human-in-the-loop notebook analysis session using direct notebook editing. You must work directly on the existing .ipynb file. Do not create a notebook builder script. Do not wholesale regenerate the notebook from a separate script.
+
+Use this dataset reference first: seattle-public-library/README.md. For analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Required workflow:
+1. Inspect the starter notebook structure directly with jq, nbformat, or equivalent targeted commands.
+2. Edit the .ipynb directly with nbformat or structured JSON operations. Make incremental notebook edits: add or modify a few cells at a time.
+3. Execute the notebook with the project environment after meaningful edits, using .venv/bin/jupyter or .venv/bin/python -m nbconvert. If sandbox blocks Jupyter kernel sockets, request escalation for the same execution command.
+4. After execution, inspect targeted cell outputs from the .ipynb JSON, not full notebook dumps. Use the outputs to decide the interpretation.
+5. Add or update a final markdown interpretation cell in the notebook based on those inspected outputs.
+6. Save at least one chart and one CSV table under agent-format-experiment/direct-notebook-agent/reports/assets/ from notebook code.
+7. Create agent-format-experiment/direct-notebook-agent/run-log.md with commands run, output cells inspected, and brief issues.
+
+Constraints:
+- No builder script for creating the notebook.
+- Do not use terminal Python to compute analysis results outside the accepted notebook. Terminal Python may edit/validate the notebook structure only.
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Keep the notebook concise: 5-9 cells.
+
+Final response: list changed files, execution commands, output cells inspected, and a short summary of findings.</pre></section>
+    <section class="prompt-block"><h4>Confucius: direct percent-cell prompt</h4><pre>You are Worker D in a controlled apples-to-apples format experiment. You are not alone in the codebase; do not revert or modify files outside your assigned write scope.
+
+Workspace: /home/jessica-nash/analytics-accelerator/week-2-preparation
+Assigned write scope only: agent-format-experiment/direct-py-cell-agent/
+Starter artifact: agent-format-experiment/direct-py-cell-agent/analysis-cells.py
+
+Task: Simulate the same human-in-the-loop analysis session using a VS Code/Jupyter percent-cell Python file. You must work directly on the existing .py file. Make incremental source edits and execute the script/cells to inspect outputs.
+
+Use this dataset reference first: seattle-public-library/README.md. For analysis, use only seattle-public-library/combined_checkout_totals_by_month_usageclass.csv. Do not modify raw data.
+
+Analysis question: How have Seattle Public Library physical vs digital checkout totals changed across complete years, and which recent complete year shows the largest digital share?
+
+Required workflow:
+1. Inspect the starter percent-cell file structure directly.
+2. Edit analysis-cells.py directly. Make incremental edits: add or modify a few cells at a time.
+3. Execute the file with .venv/bin/python after meaningful edits.
+4. Inspect targeted terminal output and generated CSV/chart outputs. Use those outputs to decide the interpretation.
+5. Add or update a final markdown/comment interpretation cell in analysis-cells.py based on inspected outputs.
+6. Save at least one chart and one CSV table under agent-format-experiment/direct-py-cell-agent/reports/assets/ from the script code.
+7. Create agent-format-experiment/direct-py-cell-agent/run-log.md with commands run, outputs inspected, and brief issues.
+
+Constraints:
+- Do not create a separate generator/builder script.
+- Do not use terminal Python to compute analysis results outside the accepted .py analysis file. Terminal commands may inspect files and execute the .py file only.
+- Code should be explicit, readable pandas for a student with one semester of Python.
+- Identify row meaning before plotting/interpreting.
+- Use complete years only, requiring 12 months for both physical and digital.
+- Keep the percent-cell file concise: 5-9 cells.
+
+Final response: list changed files, execution commands, outputs inspected, and a short summary of findings.</pre></section>
+  </section>
+</main>
+
+<script>
+const reportData = {"allUsage": {"Boyle": {"agent": "Boyle", "workflow": "Agent-native executed .ipynb", "total_tokens": 1730973, "input_tokens": 1721987, "cached_input_tokens": 1599360, "non_cached_input_tokens": 122627, "output_tokens": 8986, "duration_ms": 629326, "duration": "10m 29s", "model_calls": 25, "observed_cost": 1.682395, "artifact_tokens": 81758}, "Laplace": {"agent": "Laplace", "workflow": "Agent-native percent-cell .py", "total_tokens": 1091505, "input_tokens": 1081454, "cached_input_tokens": 998400, "non_cached_input_tokens": 83054, "output_tokens": 10051, "duration_ms": 284453, "duration": "4m 44s", "model_calls": 20, "observed_cost": 1.216, "artifact_tokens": 1734}, "Carson": {"agent": "Carson", "workflow": "Direct .ipynb", "total_tokens": 1395748, "input_tokens": 1384460, "cached_input_tokens": 1255424, "non_cached_input_tokens": 129036, "output_tokens": 11288, "duration_ms": 509812, "duration": "8m 30s", "model_calls": 24, "observed_cost": 1.611532, "artifact_tokens": 84753}, "Confucius": {"agent": "Confucius", "workflow": "Percent-cell .py", "total_tokens": 719688, "input_tokens": 712760, "cached_input_tokens": 661760, "non_cached_input_tokens": 51000, "output_tokens": 6928, "duration_ms": 219893, "duration": "3m 40s", "model_calls": 14, "observed_cost": 0.79372, "artifact_tokens": 1653}}, "overviewRatios": [{"comparison": "Agent-native", "total_tokens": 1.5858589745351601, "model_calls": 1.25, "runtime": 2.21240767367544, "observed_cost": 1.3835485197368422, "normalized_cost": 1.2490222039473684}, {"comparison": "Controlled direct-edit", "total_tokens": 1.9393792865797401, "model_calls": 1.7142857142857142, "runtime": 2.318454884875826, "observed_cost": 2.0303532731945775, "normalized_cost": 1.8242554049286903}], "controlledTurnSpecs": [{"rank": 1, "agent": "Carson", "workflow": "Direct .ipynb", "turns": [{"turn": 1, "delta": 43527, "input": 43241, "cached_input": 4992, "fresh_input": 38249, "output": 286}, {"turn": 2, "delta": 45099, "input": 44729, "cached_input": 4992, "fresh_input": 39737, "output": 370}, {"turn": 3, "delta": 46446, "input": 45411, "cached_input": 42880, "fresh_input": 2531, "output": 1035}, {"turn": 4, "delta": 47726, "input": 46986, "cached_input": 44928, "fresh_input": 2058, "output": 740}, {"turn": 5, "delta": 47932, "input": 47773, "cached_input": 46976, "fresh_input": 797, "output": 159}, {"turn": 6, "delta": 50377, "input": 48054, "cached_input": 44416, "fresh_input": 3638, "output": 2323}, {"turn": 7, "delta": 50682, "input": 50422, "cached_input": 48000, "fresh_input": 2422, "output": 260}, {"turn": 8, "delta": 51197, "input": 51077, "cached_input": 47488, "fresh_input": 3589, "output": 120}, {"turn": 9, "delta": 53802, "input": 53616, "cached_input": 51072, "fresh_input": 2544, "output": 186}, {"turn": 10, "delta": 58259, "input": 58073, "cached_input": 53120, "fresh_input": 4953, "output": 186}, {"turn": 11, "delta": 59184, "input": 58304, "cached_input": 50048, "fresh_input": 8256, "output": 880}, {"turn": 12, "delta": 59449, "input": 59230, "cached_input": 57728, "fresh_input": 1502, "output": 219}, {"turn": 13, "delta": 60840, "input": 60639, "cached_input": 58752, "fresh_input": 1887, "output": 201}, {"turn": 14, "delta": 61452, "input": 60978, "cached_input": 58240, "fresh_input": 2738, "output": 474}, {"turn": 15, "delta": 63546, "input": 63401, "cached_input": 60288, "fresh_input": 3113, "output": 145}, {"turn": 16, "delta": 63820, "input": 63623, "cached_input": 60800, "fresh_input": 2823, "output": 197}, {"turn": 17, "delta": 64048, "input": 63918, "cached_input": 63360, "fresh_input": 558, "output": 130}, {"turn": 18, "delta": 65322, "input": 64411, "cached_input": 63872, "fresh_input": 539, "output": 911}, {"turn": 19, "delta": 65553, "input": 65367, "cached_input": 63360, "fresh_input": 2007, "output": 186}, {"turn": 20, "delta": 65961, "input": 65691, "cached_input": 64896, "fresh_input": 795, "output": 270}, {"turn": 21, "delta": 66847, "input": 66319, "cached_input": 65408, "fresh_input": 911, "output": 528}, {"turn": 22, "delta": 67583, "input": 66891, "cached_input": 65920, "fresh_input": 971, "output": 692}, {"turn": 23, "delta": 68022, "input": 67631, "cached_input": 66432, "fresh_input": 1199, "output": 391}, {"turn": 24, "delta": 69074, "input": 68675, "cached_input": 67456, "fresh_input": 1219, "output": 399}]}, {"rank": 2, "agent": "Confucius", "workflow": "Percent-cell .py", "turns": [{"turn": 1, "delta": 43539, "input": 43193, "cached_input": 41344, "fresh_input": 1849, "output": 346}, {"turn": 2, "delta": 45206, "input": 44710, "cached_input": 41344, "fresh_input": 3366, "output": 496}, {"turn": 3, "delta": 45387, "input": 45275, "cached_input": 44416, "fresh_input": 859, "output": 112}, {"turn": 4, "delta": 46593, "input": 45768, "cached_input": 44928, "fresh_input": 840, "output": 825}, {"turn": 5, "delta": 46775, "input": 46662, "cached_input": 45440, "fresh_input": 1222, "output": 113}, {"turn": 6, "delta": 49566, "input": 48215, "cached_input": 46464, "fresh_input": 1751, "output": 1351}, {"turn": 7, "delta": 49753, "input": 49635, "cached_input": 48000, "fresh_input": 1635, "output": 118}, {"turn": 8, "delta": 52265, "input": 51576, "cached_input": 42880, "fresh_input": 8696, "output": 689}, {"turn": 9, "delta": 52448, "input": 52334, "cached_input": 49536, "fresh_input": 2798, "output": 114}, {"turn": 10, "delta": 54521, "input": 54131, "cached_input": 51072, "fresh_input": 3059, "output": 390}, {"turn": 11, "delta": 55441, "input": 55380, "cached_input": 53632, "fresh_input": 1748, "output": 61}, {"turn": 12, "delta": 58130, "input": 57093, "cached_input": 38272, "fresh_input": 18821, "output": 1037}, {"turn": 13, "delta": 58623, "input": 58197, "cached_input": 56704, "fresh_input": 1493, "output": 426}, {"turn": 14, "delta": 61441, "input": 60591, "cached_input": 57728, "fresh_input": 2863, "output": 850}]}], "controlledToolCategories": [{"workflow": "Direct .ipynb", "category": "Execution", "count": 4}, {"workflow": "Direct .ipynb", "category": "Notebook structure validation", "count": 6}, {"workflow": "Direct .ipynb", "category": "Output inspection", "count": 12}, {"workflow": "Direct .ipynb", "category": "Report/log writing", "count": 1}, {"workflow": "Direct .ipynb", "category": "Setup, schema, or status", "count": 7}, {"workflow": "Direct .ipynb", "category": "Source edit", "count": 6}, {"workflow": "Percent-cell .py", "category": "Execution", "count": 4}, {"workflow": "Percent-cell .py", "category": "Output inspection", "count": 5}, {"workflow": "Percent-cell .py", "category": "Setup, schema, or status", "count": 5}, {"workflow": "Percent-cell .py", "category": "Source edit", "count": 5}, {"workflow": "Percent-cell .py", "category": "Source inspection", "count": 3}], "nativeToolCategories": [{"workflow": "Agent-native executed .ipynb", "category": "Execution", "count": 10}, {"workflow": "Agent-native executed .ipynb", "category": "Output inspection", "count": 3}, {"workflow": "Agent-native executed .ipynb", "category": "Report/log writing", "count": 2}, {"workflow": "Agent-native executed .ipynb", "category": "Setup, schema, or status", "count": 15}, {"workflow": "Agent-native executed .ipynb", "category": "Source edit", "count": 3}, {"workflow": "Agent-native executed .ipynb", "category": "Source inspection", "count": 3}, {"workflow": "Agent-native percent-cell .py", "category": "Execution", "count": 11}, {"workflow": "Agent-native percent-cell .py", "category": "Output inspection", "count": 2}, {"workflow": "Agent-native percent-cell .py", "category": "Report/log writing", "count": 2}, {"workflow": "Agent-native percent-cell .py", "category": "Setup, schema, or status", "count": 12}, {"workflow": "Agent-native percent-cell .py", "category": "Source edit", "count": 5}, {"workflow": "Agent-native percent-cell .py", "category": "Source inspection", "count": 2}], "pairRatioSummaries": {"Agent-native": [{"metric": "Total tokens", "ratio": 1.5858589745351601}, {"metric": "Fresh input", "ratio": 1.4764731379584366}, {"metric": "Output tokens", "ratio": 0.8940403939906477}, {"metric": "Model calls", "ratio": 1.25}, {"metric": "Runtime", "ratio": 2.21240767367544}, {"metric": "Observed cost", "ratio": 1.3835485197368422}, {"metric": "Normalized cost", "ratio": 1.2490222039473684}], "Controlled direct-edit": [{"metric": "Total tokens", "ratio": 1.9393792865797401}, {"metric": "Fresh input", "ratio": 2.5301176470588236}, {"metric": "Output tokens", "ratio": 1.6293302540415704}, {"metric": "Model calls", "ratio": 1.7142857142857142}, {"metric": "Runtime", "ratio": 2.318454884875826}, {"metric": "Observed cost", "ratio": 2.0303532731945775}, {"metric": "Normalized cost", "ratio": 1.8242554049286903}]}, "pairs": [{"label": "Agent-native", "notebook": "Boyle", "py": "Laplace"}, {"label": "Controlled direct-edit", "notebook": "Carson", "py": "Confucius"}]};
+
+function workflowColor(name) {
+  return name.includes("ipynb") || name.includes("notebook") || name === "Boyle" || name === "Carson" ? "#012169" : "#c84e00";
+}
+
+function ratioChart() {
+  const labels = reportData.pairs.map(row => row.label);
+  const notebookAgents = reportData.pairs.map(row => row.notebook);
+  const pyAgents = reportData.pairs.map(row => row.py);
+  const notebookWorkflows = notebookAgents.map(agent => reportData.allUsage[agent].workflow);
+  const pyWorkflows = pyAgents.map(agent => reportData.allUsage[agent].workflow);
+  const traces = [
+    {
+      type: "bar",
+      name: "Notebook workflow",
+      x: labels,
+      y: notebookAgents.map(agent => reportData.allUsage[agent].total_tokens),
+      marker: { color: "#012169", opacity: 0.82 },
+      customdata: notebookWorkflows,
+      hovertemplate: "%{customdata}<br>%{x}<br>Total tokens: %{y:,}<extra></extra>"
+    },
+    {
+      type: "bar",
+      name: "Percent-cell workflow",
+      x: labels,
+      y: pyAgents.map(agent => reportData.allUsage[agent].total_tokens),
+      marker: { color: "#c84e00", opacity: 0.82 },
+      customdata: pyWorkflows,
+      hovertemplate: "%{customdata}<br>%{x}<br>Total tokens: %{y:,}<extra></extra>"
+    }
+  ];
+  Plotly.newPlot("overview-ratio-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Total task tokens" },
+    xaxis: { title: "Experiment" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 80, r: 30, t: 35, b: 70 }
+  }, { responsive: true });
+}
+
+function overviewRatioChart() {
+  const metrics = ["total_tokens", "model_calls", "runtime", "observed_cost", "normalized_cost"];
+  const labels = ["Total tokens", "Model calls", "Runtime", "Observed cost", "Normalized cost"];
+  const traces = reportData.overviewRatios.map(row => ({
+    type: "bar",
+    name: row.comparison,
+    x: labels,
+    y: metrics.map(metric => row[metric]),
+    marker: { color: row.comparison === "Controlled direct-edit" ? "#012169" : "#339898" },
+    hovertemplate: row.comparison + "<br>%{x}: %{y:.2f}x<extra></extra>"
+  }));
+  Plotly.newPlot("overview-total-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Notebook / percent-cell ratio" },
+    xaxis: { title: "Metric" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 70, r: 30, t: 35, b: 70 }
+  }, { responsive: true });
+}
+
+function pairRatioChart(divId, comparisonLabel) {
+  const rows = reportData.pairRatioSummaries[comparisonLabel];
+  const traces = [{
+    type: "bar",
+    name: "Notebook / percent-cell",
+    x: rows.map(row => row.metric),
+    y: rows.map(row => row.ratio),
+    marker: { color: rows.map(row => row.metric === "Normalized cost" ? "#339898" : "#012169"), opacity: 0.82 },
+    hovertemplate: "%{x}<br>Ratio: %{y:.2f}x<extra></extra>"
+  }];
+  Plotly.newPlot(divId, traces, {
+    yaxis: { title: "Notebook / percent-cell ratio" },
+    xaxis: { title: "Metric" },
+    shapes: [{
+      type: "line",
+      xref: "paper",
+      x0: 0,
+      x1: 1,
+      y0: 1,
+      y1: 1,
+      line: { color: "#666", width: 1, dash: "dot" }
+    }],
+    annotations: [{
+      xref: "paper",
+      yref: "y",
+      x: 1,
+      y: 1,
+      text: "parity",
+      showarrow: false,
+      xanchor: "right",
+      yanchor: "bottom",
+      font: { size: 12, color: "#555" }
+    }],
+    showlegend: false,
+    margin: { l: 80, r: 30, t: 35, b: 75 }
+  }, { responsive: true });
+}
+
+function toolCategoryChart(divId, rows) {
+  const categories = Array.from(new Set(rows.map(row => row.category))).sort();
+  const workflows = Array.from(new Set(rows.map(row => row.workflow)));
+  const traces = workflows.map(workflow => ({
+    type: "bar",
+    orientation: "h",
+    name: workflow,
+    y: categories,
+    x: categories.map(category => {
+      const match = rows.find(row => row.workflow === workflow && row.category === category);
+      return match ? match.count : 0;
+    }),
+    marker: { color: workflowColor(workflow), opacity: 0.82 },
+    hovertemplate: workflow + "<br>%{y}: %{x} calls<extra></extra>"
+  }));
+  Plotly.newPlot(divId, traces, {
+    barmode: "group",
+    xaxis: { title: "Tool calls" },
+    yaxis: { title: "Category", automargin: true },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 185, r: 30, t: 35, b: 60 }
+  }, { responsive: true });
+}
+
+function controlledDeltaCharts() {
+  for (const spec of reportData.controlledTurnSpecs) {
+    const labels = spec.turns.map(row => String(row.turn));
+    const traces = [{
+      type: "bar",
+      name: "Token delta",
+      x: labels,
+      y: spec.turns.map(row => row.delta),
+      marker: { color: workflowColor(spec.workflow), opacity: 0.75 },
+      hovertemplate: spec.workflow + "<br>Call %{x}<br>Token delta: %{y:,}<extra></extra>"
+    }];
+    Plotly.newPlot("controlled-delta-" + spec.rank, traces, {
+      xaxis: { title: "Model call / token_count event" },
+      yaxis: { title: "Token delta" },
+      margin: { l: 70, r: 30, t: 25, b: 55 }
+    }, { responsive: true });
+  }
+}
+
+function controlledInputCharts() {
+  for (const spec of reportData.controlledTurnSpecs) {
+    const labels = spec.turns.map(row => String(row.turn));
+    const traces = [
+      {
+        type: "bar",
+        name: "Cached input",
+        x: labels,
+        y: spec.turns.map(row => row.cached_input),
+        marker: { color: "#012169", opacity: 0.85 }
+      },
+      {
+        type: "bar",
+        name: "Fresh input",
+        x: labels,
+        y: spec.turns.map(row => row.fresh_input),
+        marker: { color: "#339898", opacity: 0.85 }
+      }
+    ];
+    Plotly.newPlot("controlled-input-" + spec.rank, traces, {
+      barmode: "stack",
+      xaxis: { title: "Model call / token_count event" },
+      yaxis: { title: "Input tokens" },
+      legend: { orientation: "h", y: 1.08 },
+      margin: { l: 70, r: 30, t: 25, b: 55 }
+    }, { responsive: true });
+  }
+}
+
+function cacheRatioChart() {
+  const traces = [
+    {
+      type: "bar",
+      name: "Observed cost ratio",
+      x: reportData.overviewRatios.map(row => row.comparison),
+      y: reportData.overviewRatios.map(row => row.observed_cost),
+      marker: { color: "#012169", opacity: 0.8 }
+    },
+    {
+      type: "bar",
+      name: "Normalized cost ratio",
+      x: reportData.overviewRatios.map(row => row.comparison),
+      y: reportData.overviewRatios.map(row => row.normalized_cost),
+      marker: { color: "#339898", opacity: 0.8 }
+    }
+  ];
+  Plotly.newPlot("cache-ratio-chart", traces, {
+    barmode: "group",
+    yaxis: { title: "Notebook / percent-cell cost ratio" },
+    xaxis: { title: "Comparison" },
+    legend: { orientation: "h", y: 1.12 },
+    margin: { l: 80, r: 30, t: 35, b: 70 }
+  }, { responsive: true });
+}
+
+function setupTabs() {
+  const buttons = document.querySelectorAll(".tab-button");
+  const panels = document.querySelectorAll(".tab-panel");
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      buttons.forEach(item => item.classList.remove("active"));
+      panels.forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById(button.dataset.tab).classList.add("active");
+      setTimeout(() => {
+        document.querySelectorAll(".js-plotly-plot").forEach(plot => Plotly.Plots.resize(plot));
+      }, 0);
+    });
+  });
+}
+
+
+setupTabs();
+ratioChart();
+overviewRatioChart();
+pairRatioChart("controlled-ratio-chart", "Controlled direct-edit");
+pairRatioChart("native-ratio-chart", "Agent-native");
+toolCategoryChart("controlled-tool-category-chart", reportData.controlledToolCategories);
+toolCategoryChart("native-tool-category-chart", reportData.nativeToolCategories);
+controlledDeltaCharts();
+controlledInputCharts();
+cacheRatioChart();
+
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    document.querySelectorAll(".js-plotly-plot").forEach(plot => Plotly.Plots.resize(plot));
+  }, 500);
+});
+
+</script>
+</body>
+</html>

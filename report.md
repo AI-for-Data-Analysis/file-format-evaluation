@@ -24,7 +24,7 @@ The result was clear for this task: the direct notebook workflow was heavier.
 
 The main explanation is not that the notebook agent had to write more output text. The larger session footprint came from the notebook workflow requiring more model calls and more repeated context around notebook structure, notebook execution state, and notebook output extraction. A notebook is both source code and saved execution record; the agent had to manage both. The percent-cell `.py` workflow kept source and generated artifacts separate, which gave the agent a smaller and simpler working surface.
 
-The observed cost calculation is useful for describing this run, but it should not be treated as a clean apples-to-apples standalone cost estimate. The percent-cell worker appears to have inherited a warm prompt cache from the earlier notebook worker because the two prompts shared a large prefix.
+The observed cost calculation is useful for describing this run, but it should not be treated as a clean standalone workflow-cost estimate. The percent-cell worker appears to have inherited a warm prompt cache from the earlier notebook worker because the two prompts shared a large prefix.
 
 The strongest practical recommendation from this experiment is:
 
