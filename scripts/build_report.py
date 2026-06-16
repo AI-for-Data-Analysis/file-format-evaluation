@@ -98,6 +98,80 @@ def build_tool_rows(tool_rows: list[dict[str, str]]) -> str:
     return "\n".join(rows)
 
 
+def cost_from_turns(rows: list[dict[str, str]]) -> float:
+    fresh_input = sum(int(row["turn_uncached_input_tokens"]) for row in rows)
+    cached_input = sum(int(row["turn_cached_input_tokens"]) for row in rows)
+    output = sum(int(row["turn_output_tokens"]) for row in rows)
+    return (
+        fresh_input * 5.00 / 1_000_000
+        + cached_input * 0.50 / 1_000_000
+        + output * 30.00 / 1_000_000
+    )
+
+
+def confucius_with_cold_start(rows: list[dict[str, str]], first_n_calls: int) -> list[dict[str, str]]:
+    adjusted = [dict(row) for row in rows]
+    for index in range(first_n_calls):
+        input_tokens = int(adjusted[index]["turn_input_tokens"])
+        adjusted[index]["turn_cached_input_tokens"] = "4992"
+        adjusted[index]["turn_uncached_input_tokens"] = str(input_tokens - 4992)
+    return adjusted
+
+
+def build_cost_sensitivity_rows(turn_rows: list[dict[str, str]]) -> str:
+    carson_rows = [
+        row for row in turn_rows if row["session_title"].startswith("Carson")
+    ]
+    confucius_rows = [
+        row for row in turn_rows if row["session_title"].startswith("Confucius")
+    ]
+    scenarios = [
+        (
+            "Observed telemetry",
+            "Uses the cache classification exactly as logged. This is closest to observed billing, but it is confounded by run order.",
+            cost_from_turns(carson_rows),
+            cost_from_turns(confucius_rows),
+        ),
+        (
+            "Exclude first call",
+            "Drops the most visibly cache-contaminated first call from both sessions.",
+            cost_from_turns(carson_rows[1:]),
+            cost_from_turns(confucius_rows[1:]),
+        ),
+        (
+            "Exclude first two calls",
+            "Drops the period where the two sessions had the largest cache warmup difference.",
+            cost_from_turns(carson_rows[2:]),
+            cost_from_turns(confucius_rows[2:]),
+        ),
+        (
+            "Normalize percent-cell first call",
+            "Reclassifies Confucius call 1 as if it had Carson's 4,992-token first-call cache hit.",
+            cost_from_turns(carson_rows),
+            cost_from_turns(confucius_with_cold_start(confucius_rows, 1)),
+        ),
+        (
+            "Normalize percent-cell first two calls",
+            "Reclassifies Confucius calls 1-2 as if they had Carson's 4,992-token early cache hit.",
+            cost_from_turns(carson_rows),
+            cost_from_turns(confucius_with_cold_start(confucius_rows, 2)),
+        ),
+    ]
+    rows = []
+    for scenario, interpretation, notebook_cost, py_cost in scenarios:
+        ratio = notebook_cost / py_cost
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(scenario)}</td>"
+            f"<td>{html.escape(interpretation)}</td>"
+            f"<td>{fmt_usd(notebook_cost)}</td>"
+            f"<td>{fmt_usd(py_cost)}</td>"
+            f"<td>{ratio:.2f}x</td>"
+            "</tr>"
+        )
+    return "\n".join(rows)
+
+
 def extract_prompt(prompt_markdown: str, heading: str) -> str:
     marker = f"## {heading}"
     start = prompt_markdown.index(marker)
@@ -255,13 +329,13 @@ def build_html() -> str:
   <p class="lead">A controlled comparison of two coding-agent workflows for the same analysis task: direct `.ipynb` editing versus VS Code/Jupyter percent-cell `.py` editing.</p>
 
   <div class="callout">
-    <strong>Main takeaway:</strong> for this task, the direct notebook workflow used 1.94x as many total tokens, 2.53x as many fresh input tokens, and about 2.03x the GPT-5.5 API-equivalent cost. The percent-cell `.py` workflow reached the same analytical conclusion with fewer model calls and a much smaller source artifact.
+    <strong>Main takeaway:</strong> for this task, the direct notebook workflow used 1.94x as many total tokens and 1.71x as many model calls. The percent-cell `.py` workflow reached the same analytical conclusion with fewer model calls and a much smaller source artifact. Fresh-input and cost comparisons point in the same direction, but they are partly confounded by cross-session prompt-cache behavior.
   </div>
 
   <div class="metric-grid">
     <div class="metric"><strong>{ratios['total_tokens']:.2f}x</strong>Total token ratio</div>
     <div class="metric"><strong>{ratios['fresh_input']:.2f}x</strong>Fresh input ratio</div>
-    <div class="metric"><strong>{ratios['cost']:.2f}x</strong>API cost ratio</div>
+    <div class="metric"><strong>{ratios['cost']:.2f}x</strong>Observed cost ratio</div>
     <div class="metric"><strong>{ratios['model_calls']:.2f}x</strong>Model call ratio</div>
     <div class="metric"><strong>{ratios['runtime']:.2f}x</strong>Runtime ratio</div>
   </div>
@@ -305,13 +379,22 @@ def build_html() -> str:
   <p>Fresh/non-cached input is the closest logged proxy for newly processed input context. On this measure, the notebook workflow used 129,036 fresh input tokens versus 51,000 for the percent-cell workflow.</p>
   <div id="fresh-chart" class="chart"></div>
 
-  <h2>Finding 4: API-Equivalent Cost</h2>
-  <p>Using GPT-5.5 rates, the notebook workflow cost about $1.61 and the percent-cell workflow cost about $0.79. Cost is computed from fresh input, cached input, and output separately.</p>
+  <h2>Finding 4: Observed Cost and Cache Sensitivity</h2>
+  <p>Using GPT-5.5 rates and the cache classification exactly as logged, the notebook workflow cost about $1.61 and the percent-cell workflow cost about $0.79. That observed number is useful for understanding this run, but it should not be presented as the fair standalone cost of each workflow. The percent-cell worker appears to have benefited from a prompt cache that had already been warmed by the notebook worker's similar prompt.</p>
   <div id="cost-chart" class="chart"></div>
   <pre>cost =
   fresh_input * 5.00 / 1,000,000
   + cached_input * 0.50 / 1,000,000
   + output * 30.00 / 1,000,000</pre>
+  <p>The table below shows how sensitive the cost comparison is to early cache handling. The direction stays the same, but the exact cost ratio should be treated as approximate rather than causal.</p>
+  <table>
+    <thead>
+      <tr><th>Scenario</th><th>Interpretation</th><th>Notebook cost</th><th>Percent-cell cost</th><th>Ratio</th></tr>
+    </thead>
+    <tbody>
+      {build_cost_sensitivity_rows(turn_rows)}
+    </tbody>
+  </table>
 
   <h2>Finding 5: Workflow Burden</h2>
   <p>The notebook worker made 36 classified tool calls; the percent-cell worker made 22. Notebook-specific overhead included structure validation, notebook execution, and extraction of saved cell outputs.</p>

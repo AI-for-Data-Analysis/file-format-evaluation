@@ -15,14 +15,16 @@ The result was clear for this task: the direct notebook workflow was heavier.
 |---|---:|---:|---:|
 | Total task tokens | 1,395,748 | 719,688 | 1.94x |
 | Fresh/non-cached input tokens | 129,036 | 51,000 | 2.53x |
-| GPT-5.5 API-equivalent cost | $1.61 | $0.79 | 2.03x |
+| Observed GPT-5.5 API-equivalent cost | $1.61 | $0.79 | 2.03x |
 | Model calls | 24 | 14 | 1.71x |
 | Runtime | 8m 30s | 3m 40s | 2.32x |
 | Final source artifact tokens | 84,753 | 1,653 | 51.27x |
 
 ![Summary ratios](assets/report-summary-ratios.png)
 
-The main explanation is not that the notebook agent had to write more output text. The larger cost came from the notebook workflow requiring more model calls and more repeated context around notebook structure, notebook execution state, and notebook output extraction. A notebook is both source code and saved execution record; the agent had to manage both. The percent-cell `.py` workflow kept source and generated artifacts separate, which gave the agent a smaller and simpler working surface.
+The main explanation is not that the notebook agent had to write more output text. The larger session footprint came from the notebook workflow requiring more model calls and more repeated context around notebook structure, notebook execution state, and notebook output extraction. A notebook is both source code and saved execution record; the agent had to manage both. The percent-cell `.py` workflow kept source and generated artifacts separate, which gave the agent a smaller and simpler working surface.
+
+The observed cost calculation is useful for describing this run, but it should not be treated as a clean apples-to-apples standalone cost estimate. The percent-cell worker appears to have inherited a warm prompt cache from the earlier notebook worker because the two prompts shared a large prefix.
 
 The strongest practical recommendation from this experiment is:
 
@@ -96,7 +98,7 @@ One important early-call pattern: Carson's first two calls had only about 4,992 
 
 The more stable comparison is cumulative: across the task, the notebook workflow had more total input, more fresh input, and more model calls.
 
-### 4. API Cost Was About 2x Higher for the Notebook Workflow
+### 4. Observed Cost Was Higher, but Cache Order Confounds the Exact Ratio
 
 Using GPT-5.5 rates:
 
@@ -104,7 +106,7 @@ Using GPT-5.5 rates:
 - cached input: $0.50 per 1M tokens
 - output: $30.00 per 1M tokens
 
-the estimated API-equivalent costs were:
+the observed API-equivalent costs from the logged cache classification were:
 
 - Carson notebook: $1.611532
 - Confucius percent-cell `.py`: $0.793720
@@ -123,6 +125,20 @@ cost =
 ```
 
 Reasoning-output tokens were not added separately because the session telemetry's `total_tokens` equals `input_tokens + output_tokens`.
+
+However, this is not a clean workflow-cost comparison. Confucius's first call had 43,193 input tokens, of which 41,344 were already classified as cached. Carson's first call had a similar input size, 43,241 tokens, but only 4,992 were cached. That strongly suggests the second worker benefited from a prompt cache warmed by the first worker's similar prompt.
+
+Sensitivity checks:
+
+| Scenario | Notebook cost | Percent-cell cost | Notebook / `.py` |
+|---|---:|---:|---:|
+| Observed telemetry | $1.61 | $0.79 | 2.03x |
+| Exclude first call from both sessions | $1.41 | $0.75 | 1.87x |
+| Exclude first two calls from both sessions | $1.20 | $0.70 | 1.71x |
+| Normalize percent-cell first call to Carson's first-call cache hit | $1.61 | $0.96 | 1.68x |
+| Normalize percent-cell first two calls to Carson's early cache hit | $1.61 | $1.12 | 1.44x |
+
+The cost direction is consistent across these checks, but the exact cost ratio is sensitive to cache handling. For that reason, cost should be described as a sensitivity result rather than primary causal evidence.
 
 ### 5. The Notebook Needed More Calls Because It Was Managing Source and Execution State
 
@@ -163,13 +179,13 @@ That makes the format comparison cleaner: the extra notebook cost did not buy a 
 
 ## Conclusion
 
-This experiment supports using percent-cell `.py` files as the default durable analysis format for coding-agent work. The percent-cell workflow preserved the important interactive-analysis properties: cells, rerunnable code, saved outputs, and human-readable interpretation. It did so with fewer model calls, fewer tokens, lower estimated API cost, less fresh context, shorter runtime, and a much smaller source artifact.
+This experiment supports using percent-cell `.py` files as the default durable analysis format for coding-agent work. The percent-cell workflow preserved the important interactive-analysis properties: cells, rerunnable code, saved outputs, and human-readable interpretation. It did so with fewer model calls, fewer tokens, shorter runtime, and a much smaller source artifact. The observed cost was also lower, but the exact cost ratio is confounded by cross-session prompt caching.
 
 The notebook workflow remains appropriate when the notebook itself is the required deliverable, when notebook-native output state is part of the product, or when collaborators specifically need `.ipynb` semantics. But for agent-assisted analysis where the goal is efficient iteration and reproducible artifacts, percent-cell Python plus saved outputs is the cleaner default.
 
 The most defensible claim is not "never use notebooks." It is:
 
-> Direct notebook editing can impose substantial overhead on coding agents because the agent must manage both code and notebook execution state. Percent-cell Python keeps the working source smaller and separates code from output artifacts, which can reduce agent token use and cost.
+> Direct notebook editing can impose substantial overhead on coding agents because the agent must manage both code and notebook execution state. Percent-cell Python keeps the working source smaller and separates code from output artifacts, which can reduce agent token use. Cost likely moves in the same direction, but this experiment's exact cost ratio should be treated as cache-sensitive.
 
 ## Appendix
 
