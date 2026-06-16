@@ -1,0 +1,19 @@
+workflow,agent,category,tool_call_count
+direct ipynb,Carson,direct notebook edit,6
+direct ipynb,Carson,environment check,1
+direct ipynb,Carson,filesystem/navigation,4
+direct ipynb,Carson,final status check,1
+direct ipynb,Carson,notebook execution,4
+direct ipynb,Carson,notebook output extraction,11
+direct ipynb,Carson,notebook report/log write,1
+direct ipynb,Carson,notebook structure validation,6
+direct ipynb,Carson,output artifact inspection,1
+direct ipynb,Carson,schema reference,1
+percent-cell py,Confucius,environment check,1
+percent-cell py,Confucius,filesystem/navigation,2
+percent-cell py,Confucius,final status check,1
+percent-cell py,Confucius,output artifact inspection,5
+percent-cell py,Confucius,percent-cell execution,4
+percent-cell py,Confucius,percent-cell source edit,5
+percent-cell py,Confucius,percent-cell source inspection,3
+percent-cell py,Confucius,schema reference,1

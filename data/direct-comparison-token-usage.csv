@@ -1,0 +1,3 @@
+agent,format,session_id,total_tokens,input_tokens,cached_input_tokens,non_cached_input_tokens,output_tokens,reasoning_output_tokens,duration_ms,duration,token_count_events,first_call_input_tokens,first_call_cached_input_tokens,first_call_non_cached_input_tokens,source_artifact,source_artifact_tokens
+Carson,direct ipynb edit plus execute plus targeted notebook output inspection,019ec69e-fa32-7283-b6c6-fc26f2e1d8d8,1395748,1384460,1255424,129036,11288,2333,509812,8m 30s,24,43241,4992,38249,source-artifacts/analysis-notebook.ipynb,84753
+Confucius,direct percent-cell py edit plus execute plus targeted output inspection,019ec69f-3714-7170-8901-7d4a0f4d47bb,719688,712760,661760,51000,6928,1591,219893,3m 40s,14,43193,41344,1849,source-artifacts/analysis-cells.py,1653

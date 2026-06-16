@@ -1,0 +1,3 @@
+workflow,agent,session_id,token_events,sum_last_input_tokens,final_cumulative_input_tokens,input_difference,sum_last_cached_input_tokens,final_cumulative_cached_input_tokens,cached_input_difference,sum_last_non_cached_input_tokens,final_cumulative_non_cached_input_tokens,non_cached_input_difference,sum_last_output_tokens,final_cumulative_output_tokens,output_difference,sum_last_total_tokens,final_cumulative_total_tokens,total_difference
+direct ipynb,Carson,019ec69e-fa32-7283-b6c6-fc26f2e1d8d8,24,1384460,1384460,0,1255424,1255424,0,129036,129036,0,11288,11288,0,1395748,1395748,0
+percent-cell py,Confucius,019ec69f-3714-7170-8901-7d4a0f4d47bb,14,712760,712760,0,661760,661760,0,51000,51000,0,6928,6928,0,719688,719688,0
