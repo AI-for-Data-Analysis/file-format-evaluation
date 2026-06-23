@@ -60,8 +60,8 @@ The workflows differed only in the assigned durable analysis format:
 
 The raw Codex session logs were copied into the report directory so this analysis can be audited without depending on `~/.codex`:
 
-- `raw-logs/notebook-carson-019ec69e-fa32-7283-b6c6-fc26f2e1d8d8.jsonl`
-- `raw-logs/percent-cell-confucius-019ec69f-3714-7170-8901-7d4a0f4d47bb.jsonl`
+- `sanitized-logs/notebook-carson.jsonl`
+- `sanitized-logs/percent-cell-confucius.jsonl`
 
 Token totals come from the final cumulative `total_token_usage` fields in the Codex JSONL logs. The verification file confirms that summing each event's `last_token_usage` exactly reproduces the final cumulative totals for both sessions.
 
@@ -199,8 +199,8 @@ Primary report artifacts:
 
 Raw logs:
 
-- `raw-logs/notebook-carson-019ec69e-fa32-7283-b6c6-fc26f2e1d8d8.jsonl`
-- `raw-logs/percent-cell-confucius-019ec69f-3714-7170-8901-7d4a0f4d47bb.jsonl`
+- `sanitized-logs/notebook-carson.jsonl`
+- `sanitized-logs/percent-cell-confucius.jsonl`
 
 Final worker artifacts:
 
@@ -234,7 +234,7 @@ python scripts/build_report.py
 
 No third-party Python packages are required to rebuild the HTML report. Plotly is vendored at `assets/plotly-2.35.2.min.js`, and the script reads the included CSV files in `data/`.
 
-The included raw logs are the audit source for the token totals. The included CSV files are the cleaned, report-ready extracts from those logs so the HTML can be rebuilt without access to the original `~/.codex` directory or the larger working repository.
+The included sanitized logs are the audit source for the token totals. The included CSV files are the cleaned, report-ready extracts from those logs so the HTML can be rebuilt without access to the original `~/.codex` directory or the larger working repository.
 
 ### C. Exact Worker Prompts
 

@@ -19,7 +19,7 @@ The package includes:
 - `report.pdf`: PDF version of the report, generated from `report-print.html`
 - `report.md`: Markdown narrative report
 - `data/`: CSV evidence used by the report
-- `raw-logs/`: raw Codex JSONL session logs for all four workers
+- `sanitized-logs/`: sanitized Codex JSONL session logs for all four workers
 - `source-artifacts/`: final `.ipynb` and percent-cell `.py` artifacts produced by the workers
 - `scripts/build_report.py`: standard-library Python script that regenerates `index.html`
 - `assets/plotly-2.35.2.min.js`: vendored Plotly bundle used by `index.html`
@@ -30,6 +30,8 @@ The package includes:
 From this folder:
 
 ```bash
+python scripts/sanitize_logs.py
+python scripts/sanitize_logs.py --check
 python scripts/build_report.py
 wkhtmltopdf --enable-local-file-access --margin-top 22mm --margin-bottom 16mm --margin-left 14mm --margin-right 14mm report-print.html report.pdf
 ```
@@ -41,14 +43,15 @@ The generated HTML reads only files included in this package. It does not need
 access to `~/.codex` or the original working directory.
 
 During rebuild, `scripts/build_report.py` validates the included token-usage CSV
-rows against the included raw JSONL logs. If the cumulative CSV totals no longer
+rows against the included sanitized JSONL logs. If the cumulative CSV totals no longer
 match the summed `last_token_usage` events in the logs, the build fails.
 
 ## Notes
 
 The generated CSV files are included so the report can be rebuilt without the
-original working repository. The raw logs are included for auditability and for
-anyone who wants to re-run or extend the extraction logic.
+original working repository. The sanitized logs are included for auditability and
+for anyone who wants to re-run or extend the extraction logic without publishing
+the full raw Codex transcripts.
 
 The cost estimates use GPT-5.5 API rates:
 
